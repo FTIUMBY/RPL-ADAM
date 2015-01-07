@@ -114,21 +114,13 @@ class UserController extends Controller
 	 */
 	public function actionSuggest($limit=10) {
 		if(isset($_GET['term'])) {
-			$criteria = new CDbCriteria;		
-			// Custom Search
-			$criteria->with = array(
-				'option' => array(
-					'alias'=>'option',
-					'select'=>'ommu_status',
-				),
-			);
-			$criteria->condition = 'displayname LIKE :displayname AND option.ommu_status = :option';
+			$criteria = new CDbCriteria;
+			$criteria->condition = 'displayname LIKE :displayname';
 			$criteria->select	= 'user_id, displayname';
 			$criteria->limit = $limit;
 			$criteria->order = 'user_id ASC';
 			$criteria->params = array(
 				':displayname' => '%' . strtolower($_GET['term']) . '%',
-				':option' => 1,
 			);
 			$model = Users::model()->findAll($criteria);
 
@@ -344,7 +336,7 @@ class UserController extends Controller
 	 * If deletion is successful, the browser will be redirected to the 'admin' page.
 	 * @param integer $id the ID of the model to be deleted
 	 */
-	public function actionPublish($id) 
+	public function actionStatus($id) 
 	{
 		$model=$this->loadModel($id);
 		
@@ -380,7 +372,7 @@ class UserController extends Controller
 			$this->pageTitle = $title;
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('admin_publish',array(
+			$this->render('admin_status',array(
 				'title'=>$title,
 				'model'=>$model,
 			));
