@@ -113,7 +113,7 @@ class SettingController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = 'Kanban Task Categories Manage';
+		$this->pageTitle = 'Kanban Settings';
 		$this->pageDescription = '';
 		$this->pageMeta = '';
 		$this->render('admin_index',array(

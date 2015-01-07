@@ -57,7 +57,7 @@ class KanbanTaskCategory extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('name, desc', 'required'),
-			array('publish, name, desc', 'numerical', 'integerOnly'=>true),
+			array('publish', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>32),
 			array('desc', 'length', 'max'=>128),
 			// The following rule is used by search().
@@ -155,10 +155,12 @@ class KanbanTaskCategory extends CActiveRecord
 			}
 		}else {
 			//$this->defaultColumns[] = 'cat_id';
+			/*
 			$this->defaultColumns[] = 'publish';
 			$this->defaultColumns[] = 'name';
 			$this->defaultColumns[] = 'desc';
 			$this->defaultColumns[] = 'creation_date';
+			*/
 		}
 
 		return $this->defaultColumns;
