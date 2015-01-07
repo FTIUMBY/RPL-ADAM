@@ -236,4 +236,36 @@ class KanbanTaskCategory extends CActiveRecord
 		parent::afterConstruct();
 	}
 
+	/**
+	 * Get category
+	 * 0 = unpublish
+	 * 1 = publish
+	 */
+	public static function getDivision($publish=null) 
+	{
+		if($publish == null) {
+			$model = self::model()->findAll();
+			
+		} else {
+			$model = self::model()->findAll(array(
+				//'select' => 'publish, name',
+				'condition' => 'publish = :publish',
+				'params' => array(
+					':publish' => $publish,
+				),
+				//'order' => 'division_id ASC'
+			));
+		}
+
+		$items = array();
+		if($model != null) {
+			foreach($model as $key => $val) {
+				$items[$val->cat_id] = $val->name;
+			}
+			return $items;
+		} else {
+			return false;
+		}
+	}
+
 }
