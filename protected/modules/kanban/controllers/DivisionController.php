@@ -351,6 +351,147 @@ class DivisionController extends Controller
 	}
 
 	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionVerified($id) 
+	{
+		$model=$this->loadModel($id);
+		if($model->verified == 1) {
+			$title = 'Not Verified Tester';
+			$replace = 0;
+		} else {
+			$title = 'Verified Tester';
+			$replace = 1;
+		}
+
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				//change value active or publish
+				$model->verified = $replace;
+
+				if($model->update()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-kanban-user-division',
+						'msg' => '<div class="errorSummary success"><strong>KanbanUserDivision success updated.</strong></div>',
+					));
+				}
+			}
+
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = $title;
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('admin_verified',array(
+				'title'=>$title,
+				'model'=>$model,
+			));
+		}
+	}
+
+	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionTested($id) 
+	{
+		$model=$this->loadModel($id);
+		if($model->tested == 1) {
+			$title = 'Not Tester';
+			$replace = 0;
+		} else {
+			$title = 'Tester';
+			$replace = 1;
+		}
+
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				//change value active or publish
+				$model->tested = $replace;
+
+				if($model->update()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-kanban-user-division',
+						'msg' => '<div class="errorSummary success"><strong>KanbanUserDivision success updated.</strong></div>',
+					));
+				}
+			}
+
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = $title;
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('admin_tested',array(
+				'title'=>$title,
+				'model'=>$model,
+			));
+		}
+	}
+
+	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionManagement($id) 
+	{
+		$model=$this->loadModel($id);
+		if($model->management == 1) {
+			$title = 'Not Management User';
+			$replace = 0;
+		} else {
+			$title = 'Management User';
+			$replace = 1;
+		}
+
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				//change value active or publish
+				$model->management = $replace;
+
+				if($model->update()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-kanban-user-division',
+						'msg' => '<div class="errorSummary success"><strong>KanbanUserDivision success updated.</strong></div>',
+					));
+				}
+			}
+
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = $title;
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('admin_management',array(
+				'title'=>$title,
+				'model'=>$model,
+			));
+		}
+	}
+
+	/**
 	 * Returns the data model based on the primary key given in the GET variable.
 	 * If the data model is not found, an HTTP exception will be raised.
 	 * @param integer the ID of the model to be loaded

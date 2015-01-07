@@ -61,7 +61,7 @@ class KanbanUserDivision extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('name, desc', 'required'),
-			array('publish, parent, name, desc, management, tested, verified', 'numerical', 'integerOnly'=>true),
+			array('publish, parent, management, tested, verified', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>32),
 			array('desc', 'length', 'max'=>128),
 			// The following rule is used by search().
@@ -211,7 +211,7 @@ class KanbanUserDivision extends CActiveRecord
 			);
 			$this->defaultColumns[] = array(
 				'name' => 'management',
-				'value' => '$data->management == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\')',
+				'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("management",array("id"=>$data->division_id)), $data->management, "Management User,Not Management User")',
 				'htmlOptions' => array(
 					'class' => 'center',
 				),
@@ -223,7 +223,7 @@ class KanbanUserDivision extends CActiveRecord
 			);
 			$this->defaultColumns[] = array(
 				'name' => 'tested',
-				'value' => '$data->tested == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\')',
+				'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("tested",array("id"=>$data->division_id)), $data->tested, "Tester,Not Tester")',
 				'htmlOptions' => array(
 					'class' => 'center',
 				),
@@ -235,7 +235,7 @@ class KanbanUserDivision extends CActiveRecord
 			);
 			$this->defaultColumns[] = array(
 				'name' => 'verified',
-				'value' => '$data->verified == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\')',
+				'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("verified",array("id"=>$data->division_id)), $data->verified, "Verified Tester,Not Verified Tester")',
 				'htmlOptions' => array(
 					'class' => 'center',
 				),

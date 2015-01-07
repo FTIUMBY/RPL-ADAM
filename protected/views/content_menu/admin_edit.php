@@ -12,7 +12,7 @@
  
 	$this->breadcrumbs=array(
 		'Ommu Content Menus'=>array('manage'),
-		$model->title=>array('view','id'=>$model->menu_id),
+		$model->name=>array('view','id'=>$model->menu_id),
 		'Update',
 	);
 ?>
