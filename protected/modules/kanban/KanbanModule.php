@@ -13,7 +13,10 @@ class KanbanModule extends CWebModule
 		$this->setImport(array(
 			'kanban.models.*',
 			'kanban.components.*',
+			'project.models.ProjectCategory',
+			'project.models.ProjectClient',
 			'project.models.Projects',
+			'project.models.ProjectTeam',
 		));
 	}
 

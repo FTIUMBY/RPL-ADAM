@@ -227,47 +227,34 @@ class ProjectTeam extends CActiveRecord
 	}
 
 	/**
-	 * before validate attributes
+	 * Get category
+	 * 0 = unpublish
+	 * 1 = publish
 	 */
-	/* 
-	protected function beforeValidate() {
-		if(parent::beforeValidate()) {		
-			if($this->isNewRecord) {
-				$this->verifyPassword = $data;
-			
-			}else {
+	public static function getTeam($project, $type=null) {	
+		$model = self::model()->findAll(array(
+			//'select' => 'project_id, name',
+			'condition' => 'project_id = :project',
+			'params' => array(
+				':project' => $project,
+			),
+			//'order' => 'cat_id ASC'
+		));
+
+		$items = array();
+		if($model != null) {
+			if($type == 'array') {
+				foreach($model as $key => $val) {
+					$items[$val->user_id] = $val->user->displayname;
+				}
+				return $items;
 				
-			}			
-		}
-		return true;
-	}
-	*/
-	
-	/**
-	 * before save attributes
-	 */
-	/* 
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			if($this->isNewRecord) {
-				$this->start_date 	= date('Y-m-d', strtotime($this->start_date));			
-			}else {
-				
+			} else {
+				return $model;
 			}
+		} else {
+			return false;
 		}
-		return true;
 	}
-	*/
-	
-	
-	/**
-	 * After save attributes
-	 */
-	/*
-	protected function afterSave() {
-		parent::afterSave();
-		// Create action		
-	}
-	*/
 
 }

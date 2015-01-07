@@ -56,7 +56,7 @@
 		
 		<?php } elseif($module != null && $module == 'kanban') {?>
 		
-		<li <?php echo in_array($controller, array('backlog','task','subtask','comment')) ? 'class="submenu-show"' : '' ?>><a <?php echo $controller == 'backlog' ? 'class="active"' : '' ?> href="<?php echo Yii::app()->createUrl('kanban/task/manage');?>" title="Backlog">Backlog</a>
+		<li <?php echo in_array($controller, array('backlog','task','subtask','comment')) ? 'class="submenu-show"' : '' ?>><a <?php echo $controller == 'backlog' ? 'class="active"' : '' ?> href="<?php echo Yii::app()->createUrl('kanban/backlog/index');?>" title="Backlog">Backlog</a>
 			<ul>
 				<li <?php echo $controller == 'task' ? 'class="selected"' : '' ?>><a href="<?php echo Yii::app()->createUrl('kanban/task/manage');?>" title="Task"><span class="icons">C</span>Task</a></li>
 				<li <?php echo $controller == 'subtask' ? 'class="selected"' : '' ?>><a href="<?php echo Yii::app()->createUrl('kanban/subtask/manage');?>" title="Subtask"><span class="icons">C</span>Subtask</a></li>

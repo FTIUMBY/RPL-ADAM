@@ -68,7 +68,7 @@
 				'buttons' => array(
 					'view' => array(
 						'label' => 'view',
-						'options' => array(							
+						'options' => array(
 							'class' => 'view',
 						),
 						'url' => 'Yii::app()->controller->createUrl("view",array("id"=>$data->primaryKey))'),

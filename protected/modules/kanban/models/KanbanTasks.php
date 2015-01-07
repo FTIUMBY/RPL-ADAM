@@ -397,10 +397,12 @@ class KanbanTasks extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = array(
-				'name' => 'project_search',
-				'value' => '$data->project->title',
-			);
+			if(!isset($_GET['project'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'project_search',
+					'value' => '$data->project->title',
+				);
+			}
 			/*
 			$this->defaultColumns[] = array(
 				'name' => 'number',
@@ -410,6 +412,7 @@ class KanbanTasks extends CActiveRecord
 				),
 			);
 			*/
+			$this->defaultColumns[] = 'priority';
 			$this->defaultColumns[] = array(
 				'name' => 'task_name',
 				'value' => '$data->category->name." ".$data->task_name."<br/><span>".Utility::shortText(Utility::hardDecode($data->task_desc),200)."</span>"',
@@ -418,12 +421,13 @@ class KanbanTasks extends CActiveRecord
 				),
 				'type' => 'raw',
 			);
-			$this->defaultColumns[] = 'priority';
 			$this->defaultColumns[] = array(
 				'name' => 'user_search',
 				'value' => '$data->user->displayname',
 			);
 			$this->defaultColumns[] = 'task_status';
+			
+			/* Comment
 			$this->defaultColumns[] = array(
 				'name' => 'updated_date',
 				'value' => 'Utility::dateFormat($data->updated_date)',
@@ -454,7 +458,6 @@ class KanbanTasks extends CActiveRecord
 				'name' => 'updated_search',
 				'value' => '$data->updatedby->displayname',
 			);
-
             if(!isset($_GET['type'])) {
                 $this->defaultColumns[] = array(
                     'name' => 'pause',
@@ -549,6 +552,7 @@ class KanbanTasks extends CActiveRecord
 					),
 				), true),
 			);
+			*/
 			if(!isset($_GET['type'])) {
 				$this->defaultColumns[] = array(
 					'name' => 'publish',
