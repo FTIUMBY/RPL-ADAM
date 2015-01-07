@@ -20,21 +20,23 @@ class UserIdentity extends CUserIdentity
 	 */
 	public function authenticate()
 	{
-		$username = Users::model()->with('option')->find(array(
+		$username = Users::model()->find(array(
 			//'select' => 'invite_id',
-			'condition' => 'username = :username AND option.ommu_status = :option',
+			'condition' => 'username = :username AND enabled = :enabled AND verified = :verified',
 			'params' => array(
 				':username' => $this->username,
-				':option' => 1,
+				':enabled' => 1,
+				':verified' => 1,
 			),
 		));
 		if(empty($username)) {
-			$record = Users::model()->with('option')->find(array(
+			$record = Users::model()->find(array(
 				//'select' => 'invite_id',
-				'condition' => 'email = :email AND option.ommu_status = :option',
+				'condition' => 'email = :email AND enabled = :enabled AND verified = :verified',
 				'params' => array(
 					':email' => $this->username,
-					':option' => 1,
+					':enabled' => 1,
+					':verified' => 1,
 				),
 			));
 		} else {
@@ -48,14 +50,12 @@ class UserIdentity extends CUserIdentity
 		} else {
 			$this->_id = $record->user_id;
 			$this->setState('level', $record->level_id);
-			$this->setState('profile', $record->profile_id);
-			$this->setState('language', $record->language_id);
+			$this->setState('username', $record->username);
 			$this->email = $record->email;
 			$this->setState('fname', $record->first_name);
 			$this->setState('lname', $record->last_name);
 			$this->setState('displayname', $record->displayname);
 			$this->setState('photo', $record->photo);
-			$this->setState('status', $record->status_id);
 			$this->setState('enabled', $record->enabled);
 			$this->setState('verified', $record->verified);
 			$this->setState('creation_date', $record->creation_date);
