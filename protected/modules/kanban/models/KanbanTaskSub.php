@@ -64,10 +64,10 @@ class KanbanTaskSub extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('task_id, user_id, subtask_name, action_by, creation_date', 'required'),
+			array('task_id, subtask_name', 'required'),
 			array('done_status', 'numerical', 'integerOnly'=>true),
 			array('task_id, user_id, action_by', 'length', 'max'=>11),
-			array('action_date', 'safe'),
+			array('user_id, action_by, action_date', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('subtask_id, done_status, task_id, user_id, subtask_name, action_date, action_by, creation_date,
@@ -310,6 +310,20 @@ class KanbanTaskSub extends CActiveRecord
 
 		}
 		parent::afterConstruct();
+	}
+
+	/**
+	 * before validate attributes
+	 */
+	protected function beforeSave() {
+		if(parent::beforeSave()) {	
+			$action = strtolower(Yii::app()->controller->action->id);
+			if(!$this->isNewRecord) {
+				if($action != 'edit')
+					$this->action_by = Yii::app()->user->id;
+			}
+		}
+		return true;
 	}
 
 }
