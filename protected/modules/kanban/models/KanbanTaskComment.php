@@ -61,9 +61,10 @@ class KanbanTaskComment extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('task_id, user_id, comment, creation_date', 'required'),
+			array('task_id, comment', 'required'),
 			array('publish', 'numerical', 'integerOnly'=>true),
 			array('task_id, user_id', 'length', 'max'=>11),
+			array('user_id', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('comment_id, publish, task_id, user_id, comment, creation_date,
@@ -267,6 +268,18 @@ class KanbanTaskComment extends CActiveRecord
 
 		}
 		parent::afterConstruct();
+	}
+
+	/**
+	 * before validate attributes
+	 */
+	protected function beforeSave() {
+		if(parent::beforeSave()) {
+			if($this->isNewRecord) {
+				$this->user_id = Yii::app()->user->id;
+			}
+		}
+		return true;
 	}
 
 }
