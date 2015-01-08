@@ -26,39 +26,16 @@
 			<?php echo $form->errorSummary($model); ?>
 		</div>
 		<?php //begin.Messages ?>
-
 		<div class="clearfix">
 			<?php echo $form->labelEx($model,'project_id'); ?>
 			<div class="desc">
-				<?php echo $form->textField($model,'project_id',array('maxlength'=>11)); ?>
+				<?php if($model->isNewRecord) {?>
+					<?php echo $form->textField($model,'project_id',array('maxlength'=>11)); ?>
+				<?php } else {?>
+					<strong><?php echo Projects::getInfo($model->project_id, 'title');?></strong>
+					<?php echo $form->hiddenField($model,'project_id'); ?>				
+				<?php }?>
 				<?php echo $form->error($model,'project_id'); ?>
-				<?php /*<div class="small-px silent"></div>*/?>
-			</div>
-		</div>
-
-		<div class="clearfix">
-			<?php echo $form->labelEx($model,'user_id'); ?>
-			<div class="desc">
-				<?php echo $form->textField($model,'user_id',array('maxlength'=>11)); ?>
-				<?php echo $form->error($model,'user_id'); ?>
-				<?php /*<div class="small-px silent"></div>*/?>
-			</div>
-		</div>
-
-		<div class="clearfix">
-			<?php echo $form->labelEx($model,'number'); ?>
-			<div class="desc">
-				<?php echo $form->textField($model,'number'); ?>
-				<?php echo $form->error($model,'number'); ?>
-				<?php /*<div class="small-px silent"></div>*/?>
-			</div>
-		</div>
-
-		<div class="clearfix">
-			<?php echo $form->labelEx($model,'cat_id'); ?>
-			<div class="desc">
-				<?php echo $form->textField($model,'cat_id'); ?>
-				<?php echo $form->error($model,'cat_id'); ?>
 				<?php /*<div class="small-px silent"></div>*/?>
 			</div>
 		</div>
@@ -66,7 +43,8 @@
 		<div class="clearfix">
 			<?php echo $form->labelEx($model,'task_name'); ?>
 			<div class="desc">
-				<?php echo $form->textField($model,'task_name',array('maxlength'=>64, 'class'=>'span-10')); ?>
+				<?php echo $form->dropDownList($model,'cat_id', KanbanTaskCategory::getCategory(1)); ?>
+				<?php echo $form->textArea($model,'task_name',array('maxlength'=>64, 'class'=>'span-10 smaller')); ?>
 				<?php echo $form->error($model,'task_name'); ?>
 				<?php /*<div class="small-px silent"></div>*/?>
 			</div>
@@ -75,7 +53,7 @@
 		<div class="clearfix">
 			<?php echo $form->labelEx($model,'task_desc'); ?>
 			<div class="desc">
-				<?php echo $form->textArea($model,'task_desc',array('rows'=>6, 'cols'=>50, 'class'=>'span-10 smaller')); ?>
+				<?php echo $form->textArea($model,'task_desc',array('rows'=>6, 'cols'=>50, 'class'=>'span-10 small')); ?>
 				<?php echo $form->error($model,'task_desc'); ?>
 				<?php /*<div class="small-px silent"></div>*/?>
 			</div>
@@ -86,6 +64,15 @@
 			<div class="desc">
 				<?php echo $form->textField($model,'current_action',array('maxlength'=>64, 'class'=>'span-8')); ?>
 				<?php echo $form->error($model,'current_action'); ?>
+				<?php /*<div class="small-px silent"></div>*/?>
+			</div>
+		</div>
+
+		<div class="clearfix">
+			<?php echo $form->labelEx($model,'user_id'); ?>
+			<div class="desc">
+				<?php echo $form->dropDownList($model,'user_id', ProjectTeam::getTeam($model->project_id, 'array')); ?>
+				<?php echo $form->error($model,'user_id'); ?>
 				<?php /*<div class="small-px silent"></div>*/?>
 			</div>
 		</div>
@@ -103,7 +90,7 @@
 			<?php echo $form->labelEx($model,'due_date'); ?>
 			<div class="desc">
 				<?php 
-				!$model->isNewRecord ? ($model->due_date != '0000-00-00' ? $model->due_date = date('d-m-Y', strtotime($model->due_date)) : '') : '';
+				$model->due_date = !$model->isNewRecord ? ($model->due_date != '0000-00-00' ? $model->due_date = date('d-m-Y', strtotime($model->due_date)) : '') : '';
 				//echo $form->textField($model,'due_date');
 				$this->widget('zii.widgets.jui.CJuiDatePicker',array(
 					'model'=>$model, 
@@ -125,7 +112,7 @@
 			<?php echo $form->labelEx($model,'reschedule_date'); ?>
 			<div class="desc">
 				<?php 
-				!$model->isNewRecord ? ($model->reschedule_date != '0000-00-00' ? $model->reschedule_date = date('d-m-Y', strtotime($model->reschedule_date)) : '') : '';
+				$model->reschedule_date = !$model->isNewRecord ? ($model->reschedule_date != '0000-00-00' ? $model->reschedule_date = date('d-m-Y', strtotime($model->reschedule_date)) : '') : '';
 				//echo $form->textField($model,'reschedule_date');
 				$this->widget('zii.widgets.jui.CJuiDatePicker',array(
 					'model'=>$model, 
@@ -147,11 +134,11 @@
 			<?php echo $form->labelEx($model,'overtime'); ?>
 			<div class="desc">
 				<?php echo $form->dropDownList($model,'overtime', array(
-					1 => 'Yes',
 					0 => 'No',
+					1 => 'Yes',
 				)); ?>
 				<?php 
-				!$model->isNewRecord ? ($model->overtime_date != '0000-00-00' ? $model->overtime_date = date('d-m-Y', strtotime($model->overtime_date)) : '') : '';
+				$model->overtime_date = !$model->isNewRecord ? ($model->overtime_date != '0000-00-00' ? $model->overtime_date = date('d-m-Y', strtotime($model->overtime_date)) : '') : '';
 				//echo $form->textField($model,'overtime_date');
 				$this->widget('zii.widgets.jui.CJuiDatePicker',array(
 					'model'=>$model, 
@@ -184,6 +171,15 @@
 				</div>
 			</div>
 		<?php }?>
+
+		<div class="clearfix">
+			<?php echo $form->labelEx($model,'number'); ?>
+			<div class="desc">
+				<?php echo $form->textField($model,'number'); ?>
+				<?php echo $form->error($model,'number'); ?>
+				<?php /*<div class="small-px silent"></div>*/?>
+			</div>
+		</div>
 
 		<div class="clearfix publish">
 			<?php echo $form->labelEx($model,'publish'); ?>

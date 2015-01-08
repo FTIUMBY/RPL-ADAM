@@ -96,8 +96,8 @@ class KanbanTasks extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('cat_id, number, current_action, task_name, task_desc, priority, due_date, overtime, task_status', 'required'),
-			//array('project_id, user_id', 'required'),			
+			array('cat_id, current_action, task_name, task_desc, priority, due_date, overtime, task_status', 'required'),
+			array('project_id, user_id', 'required'),			
 			array('publish, cat_id, division_id, number, priority, overtime, pause, task_status, tested_status, tested_verified, subtask, subtask_done, comment', 'numerical', 'integerOnly'=>true),
 			array('project_id, user_id, progress_by, done_by, tested_by, creation_by, updated_by', 'length', 'max'=>11),
 			array('current_action, task_name', 'length', 'max'=>64),
@@ -572,6 +572,16 @@ class KanbanTasks extends CActiveRecord
 		parent::afterConstruct();
 	}
 	
+	public static function getTaskPriority() {
+		$status = array(
+			1 => 'Medium',
+			2 => 'High',
+			3 => 'Veryhigh',
+		);
+		
+		return $status;
+	}
+	
 	public static function getTaskStatus() {
 		$status = array(
 			0 => 'To do',
@@ -589,7 +599,7 @@ class KanbanTasks extends CActiveRecord
 	protected function beforeValidate() {
 		if(parent::beforeValidate()) {	
 			$controller = strtolower(Yii::app()->controller->id);
-			$action = strtolower(Yii::app()->controller->action->id);	
+			$action = strtolower(Yii::app()->controller->action->id);
 			if($this->isNewRecord) {
 				$this->creation_by = Yii::app()->user->id;
 				
@@ -598,8 +608,8 @@ class KanbanTasks extends CActiveRecord
 					if($this->reschedule_date == $this->due_date) {
 						$this->addError('reschedule_date', 'Reschedule Date tidak boleh sama dengan Due date.');
 					}
-					if($this->reschedule_date > $this->due_date) {
-						$this->addError('reschedule_date', 'Reschedule Date tidak boleh lebih besar dari Due date.');
+					if($this->reschedule_date < $this->due_date) {
+						$this->addError('reschedule_date', 'Reschedule Date tidak boleh lebih kecil dari Due date.');
 					}
 					if($this->old_task_status != $this->task_status) {
 						$this->updated_by = Yii::app()->user->id;
@@ -642,6 +652,7 @@ class KanbanTasks extends CActiveRecord
 				$this->due_date = date('Y-m-d', strtotime($this->due_date));
 				
 			} else {
+				$this->due_date = date('Y-m-d', strtotime($this->due_date));
 				if($this->reschedule_date != '') {
 					$this->reschedule_date = date('Y-m-d', strtotime($this->reschedule_date));
 				}

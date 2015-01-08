@@ -75,7 +75,7 @@ class TaskController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index','view'),
+				'actions'=>array('index'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
@@ -85,7 +85,7 @@ class TaskController extends Controller
 				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','runaction','delete','publish','headline'),
+				'actions'=>array('manage','add','edit','view','runaction','delete','publish','headline'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
@@ -106,31 +106,6 @@ class TaskController extends Controller
 	{
 		$this->redirect(array('manage'));
 	}
-	
-	/**
-	 * Displays a particular model.
-	 * @param integer $id the ID of the model to be displayed
-	 */
-	public function actionView($id) 
-	{
-		$arrThemes = Utility::getCurrentTemplate('public');
-		Yii::app()->theme = $arrThemes['folder'];
-		$this->layout = $arrThemes['layout'];
-		Utility::applyCurrentTheme($this->module);
-		
-		$setting = VideoSetting::model()->findByPk(1,array(
-			'select' => 'meta_keyword',
-		));
-
-		$model=$this->loadModel($id);
-
-		$this->pageTitle = 'View Kanban Tasks';
-		$this->pageDescription = '';
-		$this->pageMeta = $setting->meta_keyword;
-		$this->render('admin_view',array(
-			'model'=>$model,
-		));
-	}	
 
 	/**
 	 * Manages all models.
@@ -197,6 +172,9 @@ class TaskController extends Controller
 			Yii::app()->end();
 			
 		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 700;
 
 			$this->pageTitle = 'Create Kanban Tasks';
 			$this->pageDescription = '';
@@ -255,6 +233,26 @@ class TaskController extends Controller
 			));
 		}
 	}
+	
+	/**
+	 * Displays a particular model.
+	 * @param integer $id the ID of the model to be displayed
+	 */
+	public function actionView($id) 
+	{
+		$model=$this->loadModel($id);
+		
+		$this->dialogDetail = true;
+		$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+		$this->dialogWidth = 700;
+
+		$this->pageTitle = 'View Kanban Tasks';
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('admin_view',array(
+			'model'=>$model,
+		));
+	}	
 
 	/**
 	 * Displays a particular model.
