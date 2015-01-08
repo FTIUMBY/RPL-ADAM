@@ -241,7 +241,7 @@ class KanbanTaskCategory extends CActiveRecord
 	 * 0 = unpublish
 	 * 1 = publish
 	 */
-	public static function getDivision($publish=null) 
+	public static function getCategory($publish=null) 
 	{
 		if($publish == null) {
 			$model = self::model()->findAll();
