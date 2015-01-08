@@ -27,7 +27,7 @@
 		<?php $this->widget('application.components.system.OGridView', array(
 			'id'=>'kanban-task-category-grid',
 			'dataProvider'=>$model->search(),
-			//'filter'=>$model,
+			'filter'=>$model,
 			'columns' => array(
 				array(
 					'header' => 'No',
@@ -64,15 +64,24 @@
 					'header' => 'Actions',
 					'class'=>'CButtonColumn',
 					'buttons' => array(
+						'view' => array(
+							'label' => 'view',
+							'options' => array(							
+								'class' => 'view',
+								'title' => 'View Board',
+							),
+							'url' => 'Yii::app()->controller->createUrl("board",array("pid"=>$data->primaryKey))',
+						),
 						'add' => array(
 							'label' => 'add',
 							'options' => array(							
 								'class' => 'add',
+								'title' => 'Add Task',
 							),
-							'url' => 'Yii::app()->controller->createUrl("task/add",array("id"=>$data->primaryKey))',
+							'url' => 'Yii::app()->controller->createUrl("add",array("pid"=>$data->primaryKey))',
 						),
 					),
-					'template' => '{add}',
+					'template' => '{view}|{add}',
 				),
 			),
 			'pager' => array('header' => ''),
