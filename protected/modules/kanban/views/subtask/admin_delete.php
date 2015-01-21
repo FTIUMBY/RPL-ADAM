@@ -10,10 +10,10 @@
  *
  */
 
-$this->breadcrumbs=array(
-	'Kanban Task Subs'=>array('manage'),
-	'Delete',
-);
+	$this->breadcrumbs=array(
+		'Kanban Task Subs'=>array('manage'),
+		'Delete',
+	);
 ?>
 
 <?php $form=$this->beginWidget('application.components.system.OActiveForm', array(
@@ -23,8 +23,7 @@ $this->breadcrumbs=array(
 )); ?>
 
 	<div class="dialog-content">
-		<?php echo 'Are you sure you want to delete this item?';?>
-		
+		<?php echo 'Are you sure you want to delete this item?';?>		
 	</div>
 	<div class="dialog-submit">
 		<?php echo CHtml::submitButton('Delete', array('onclick' => 'setEnableSave()')); ?>

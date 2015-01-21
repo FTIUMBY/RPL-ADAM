@@ -23,7 +23,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 	 * = Dialog Condition
 	 */
 	if($this->dialogDetail == true) {
-		$dialogWidth = !empty($this->dialogWidth) ? $this->dialogWidth.'px' : '650px';
+		$dialogWidth = !empty($this->dialogWidth) ? $this->dialogWidth.'px' : '750px';
 	} else {
 		$dialogWidth = '';
 	}
@@ -137,7 +137,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 		<div class="fixed">
 			<div class="valign">
 				<div class="dialog-box">
-					<div class="content" id="<?php echo $dialogWidth;?>" name="notifier-wrapper"><?php echo ($this->dialogDetail == true && !empty($this->dialogWidth)) ? $content : '';?></div>
+					<div class="content" id="<?php echo $dialogWidth;?>" name="notifier-wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? (($this->dialogDetail == true && !empty($this->dialogWidth)) ? $content : '') : '' ?></div>
 				</div>
 			</div>
 		</div>
@@ -149,12 +149,16 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 		<div class="fixed">
 			<div class="valign">
 				<div class="dialog-box">
-					<div class="content" id="<?php echo $dialogWidth;?>" name="dialog-wrapper"><?php echo ($this->dialogDetail == true && empty($this->dialogWidth)) ? $content : '';?></div>
+					<div class="content" id="<?php echo $dialogWidth;?>" name="dialog-wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? (($this->dialogDetail == true && empty($this->dialogWidth)) ? $content : '') : '' ?></div>			
 				</div>
 			</div>
 		</div>
 	</div>
 	<?php //end.Dialog ?>
+
+	<div class="board" <?php echo ($currentModule == 'kanban/backlog' && in_array($action, array('board','add','edit','subtask','comment'))) ? 'style="display: block;"' : '';?>>
+		<div class="fixed"><?php echo $currentModuleAction == 'kanban/backlog/board' ? $content : '' ?></div>
+	</div>
 
 	<?php //begin.BodyContent ?>
 	<div class="body clearfix">
@@ -176,8 +180,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 
 		<?php //begin.Content ?>
 		<div class="content">
-			<div class="wrapper">
-				<?php echo $this->dialogDetail == false ? $content : '';?>
+			<div class="wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? ($this->dialogDetail == false ? $content : '') : '' ?>
 			</div>
 		</div>
 		<?php //end.Content ?>

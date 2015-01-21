@@ -27,6 +27,10 @@
 class UserHistoryPassword extends CActiveRecord
 {
 	public $defaultColumns = array();
+	
+	// Variable Search
+	public $user_search;
+	public $level_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -60,7 +64,8 @@ class UserHistoryPassword extends CActiveRecord
 			array('password', 'length', 'max'=>32),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, user_id, password, update_date', 'safe', 'on'=>'search'),
+			array('id, user_id, password, update_date,
+				level_search, user_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -72,7 +77,7 @@ class UserHistoryPassword extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'user' => array(self::BELONGS_TO, 'OmmuUsers', 'user_id'),
+			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
 		);
 	}
 
@@ -86,6 +91,8 @@ class UserHistoryPassword extends CActiveRecord
 			'user_id' => 'User',
 			'password' => 'Password',
 			'update_date' => 'Update Date',
+			'level_search' => 'Level',
+			'user_search' => 'User',
 		);
 	}
 
@@ -116,6 +123,15 @@ class UserHistoryPassword extends CActiveRecord
 		$criteria->compare('t.password',$this->password,true);
 		if($this->update_date != null && !in_array($this->update_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.update_date)',date('Y-m-d', strtotime($this->update_date)));
+		
+		// Custom Search
+		$criteria->with = array(
+			'user' => array(
+				'alias'=>'user',
+				'select'=>'level_id, displayname'
+			),
+		);	
+		$criteria->compare('user.displayname',strtolower($this->user_search), true);
 
 		if(!isset($_GET['UserHistoryPassword_sort']))
 			$criteria->order = 'id DESC';
@@ -172,7 +188,14 @@ class UserHistoryPassword extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'user_id';
+			$this->defaultColumns[] = array(
+				'name' => 'level_search',
+				'value' => '$data->user->level->level_name',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'user_search',
+				'value' => '$data->user->displayname',
+			);
 			$this->defaultColumns[] = 'password';
 			$this->defaultColumns[] = array(
 				'name' => 'update_date',

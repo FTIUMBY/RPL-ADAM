@@ -227,11 +227,10 @@ class ProjectTeam extends CActiveRecord
 	}
 
 	/**
-	 * Get category
-	 * 0 = unpublish
-	 * 1 = publish
+	 * Get team
 	 */
-	public static function getTeam($project, $type=null) {	
+	public static function getTeam($project, $type=null)
+	{	
 		$model = self::model()->findAll(array(
 			//'select' => 'project_id, name',
 			'condition' => 'project_id = :project',

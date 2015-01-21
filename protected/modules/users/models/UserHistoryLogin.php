@@ -26,6 +26,10 @@
 class UserHistoryLogin extends CActiveRecord
 {
 	public $defaultColumns = array();
+	
+	// Variable Search
+	public $user_search;
+	public $level_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -58,7 +62,8 @@ class UserHistoryLogin extends CActiveRecord
 			array('user_id', 'length', 'max'=>11),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, user_id, lastlogin_date', 'safe', 'on'=>'search'),
+			array('id, user_id, lastlogin_date,
+				level_search, user_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -70,7 +75,7 @@ class UserHistoryLogin extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'user' => array(self::BELONGS_TO, 'OmmuUsers', 'user_id'),
+			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
 		);
 	}
 
@@ -83,6 +88,8 @@ class UserHistoryLogin extends CActiveRecord
 			'id' => 'ID',
 			'user_id' => 'User',
 			'lastlogin_date' => 'Lastlogin Date',
+			'level_search' => 'Level',
+			'user_search' => 'User',
 		);
 	}
 
@@ -112,6 +119,15 @@ class UserHistoryLogin extends CActiveRecord
 		}
 		if($this->lastlogin_date != null && !in_array($this->lastlogin_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.lastlogin_date)',date('Y-m-d', strtotime($this->lastlogin_date)));
+		
+		// Custom Search
+		$criteria->with = array(
+			'user' => array(
+				'alias'=>'user',
+				'select'=>'level_id, displayname'
+			),
+		);	
+		$criteria->compare('user.displayname',strtolower($this->user_search), true);
 
 		if(!isset($_GET['UserHistoryLogin_sort']))
 			$criteria->order = 'id DESC';
@@ -167,7 +183,14 @@ class UserHistoryLogin extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'user_id';
+			$this->defaultColumns[] = array(
+				'name' => 'level_search',
+				'value' => '$data->user->level->level_name',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'user_search',
+				'value' => '$data->user->displayname',
+			);
 			$this->defaultColumns[] = array(
 				'name' => 'lastlogin_date',
 				'value' => 'Utility::dateFormat($data->lastlogin_date)',

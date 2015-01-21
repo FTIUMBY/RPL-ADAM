@@ -26,7 +26,7 @@
 	<ul>
 		<li <?php echo $dashboard; ?>><a class="dashboard" href="<?php echo Yii::app()->createUrl('admin/index');?>" title="Dashboard">Dashboard</a></li>
 		<li <?php echo $project; ?>><a class="content" href="<?php echo Yii::app()->createUrl('project/admin/manage');?>" title="Project">Project</a></li>
-		<li <?php echo $kanban; ?>><a class="content" href="<?php echo Yii::app()->createUrl('kanban/task/manage');?>" title="Kanban">Kanban</a></li>
+		<li <?php echo $kanban; ?>><a class="content" href="<?php echo Yii::app()->createUrl('kanban/backlog/index');?>" title="Kanban">Kanban</a></li>
 		<li <?php echo $member; ?>><a class="member" href="<?php echo Yii::app()->createUrl('users/member/manage');?>" title="User">User</a></li>
 		<li <?php echo $settings; ?>><a class="setting" href="<?php echo Yii::app()->createUrl('settings/general');?>" title="Setting">Setting</a></li>
 	</ul>

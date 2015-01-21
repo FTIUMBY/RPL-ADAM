@@ -440,6 +440,16 @@ fieldset div label span.required {
 fieldset div div.desc {
 	width: 70%;
 }
+fieldset div div.desc input,
+fieldset div div.desc select,
+fieldset div div.desc textarea {
+	margin: 0 0 10px 0;
+}
+fieldset div div.desc input:last-child,
+fieldset div div.desc select:last-child,
+fieldset div div.desc textarea:last-child {
+	margin: 0 0 0 0;
+}
 fieldset div div.desc img {
 	display: block;
 }

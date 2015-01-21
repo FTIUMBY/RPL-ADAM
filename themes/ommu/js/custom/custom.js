@@ -121,7 +121,7 @@ function dialogActionClosed() {
 		}
 	}); */
 
-	$('.dialog .dialog-box a.closed').live('click',function(){
+	$('.dialog .dialog-box a.closed, .dialog .dialog-box input#closed').live('click',function(){
 		dialogClosed();
 		dialogClosedPush();
 	});
@@ -487,9 +487,9 @@ if(dialogGroundUrl != '') {
 					$('style[type="text/css"]').html('');
 					$('style[type="text/css"]').html(data.script.cssFiles);
 					$.when(
-						$.each(data.script.scriptFiles, function(key, val) {
-							$.getScript(val);
-						})
+						//$.each(data.script.scriptFiles, function(key, val) {
+						//	$.getScript(val);
+						//})
 					).then(function() {
 					});
 				}
@@ -558,9 +558,9 @@ function replaceContent(data, type) {
 			$('style[type="text/css"]').html('');
 			$('style[type="text/css"]').html(data.script.cssFiles);
 			$.when(
-				$.each(data.script.scriptFiles, function(key, val) {
-					$.getScript(val);
-				})
+				//$.each(data.script.scriptFiles, function(key, val) {
+				//	$.getScript(val);
+				//})
 			).then(function() {
 			});
 		}
