@@ -604,34 +604,14 @@ class KanbanTasks extends CActiveRecord
 				$this->creation_by = Yii::app()->user->id;
 				
 			} else {
-				if($action == 'edit') {				
+				if($action == 'edit') {
 					if($this->reschedule_date == $this->due_date) {
 						$this->addError('reschedule_date', 'Reschedule Date tidak boleh sama dengan Due date.');
 					}
 					if($this->reschedule_date < $this->due_date) {
 						$this->addError('reschedule_date', 'Reschedule Date tidak boleh lebih kecil dari Due date.');
 					}
-					if($this->old_task_status != $this->task_status) {
-						$this->updated_by = Yii::app()->user->id;
-						if($this->task_status == 1)
-							$this->progress_by = Yii::app()->user->id;
-						else if($this->task_status == 2)
-							$this->done_by = Yii::app()->user->id;
-						else if($this->task_status == 3)
-							$this->tested_by = Yii::app()->user->id;
-					}
-				}
-			
-				if($controller == 'backlog') {					
-					$this->updated_by = Yii::app()->user->id;
-				}
-				if($action == 'droptoprogres') {
-					$this->progress_by = Yii::app()->user->id;
-				} else if($action == 'droptodone') {
-					$this->done_by = Yii::app()->user->id;
-				} else if($action == 'droptotest') {
-					$this->tested_by = Yii::app()->user->id;
-				}				
+				}		
 			}
 			if($this->overtime == 1 && $this->overtime_date == '') {
 				$this->addError('overtime_date', 'Overtime Date tidak boleh kosong.');
@@ -645,6 +625,8 @@ class KanbanTasks extends CActiveRecord
 	 */
 	protected function beforeSave() {
 		if(parent::beforeSave()) {
+			$controller = strtolower(Yii::app()->controller->id);
+			$action = strtolower(Yii::app()->controller->action->id);
 			if($this->overtime == 1 && $this->overtime_date != '') {
 				$this->overtime_date = date('Y-m-d', strtotime($this->overtime_date));
 			}
@@ -656,6 +638,27 @@ class KanbanTasks extends CActiveRecord
 				if($this->reschedule_date != '') {
 					$this->reschedule_date = date('Y-m-d', strtotime($this->reschedule_date));
 				}
+				if($action == 'edit') {
+					if($this->old_task_status != $this->task_status) {
+						$this->updated_by = Yii::app()->user->id;
+						if($this->task_status == 1)
+							$this->progress_by = Yii::app()->user->id;
+						else if($this->task_status == 2)
+							$this->done_by = Yii::app()->user->id;
+						else if($this->task_status == 3)
+							$this->tested_by = Yii::app()->user->id;
+					}					
+				}
+				if($controller == 'backlog') {					
+					$this->updated_by = Yii::app()->user->id;
+				}
+				if($action == 'droptoprogres') {
+					$this->progress_by = Yii::app()->user->id;
+				} else if($action == 'droptodone') {
+					$this->done_by = Yii::app()->user->id;
+				} else if($action == 'droptotest') {
+					$this->tested_by = Yii::app()->user->id;
+				}		
 			}
 		}
 		return true;

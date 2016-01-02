@@ -1,0 +1,11 @@
+protected\modules
+=======
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\project.yaml" "D:\htdocs\_project_ommu_module_projects\modules\project\project.yaml"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\LICENSE" "D:\htdocs\_project_ommu_module_projects\modules\project\LICENSE"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\assets" "D:\htdocs\_project_ommu_module_projects\modules\project\assets"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\components" "D:\htdocs\_project_ommu_module_projects\modules\project\components"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\models" "D:\htdocs\_project_ommu_module_projects\modules\project\models"
+--
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\controllers\o" "D:\htdocs\_project_ommu_module_projects\modules\project\controllers\o"
+--
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\views\o" "D:\htdocs\_project_ommu_module_projects\modules\project\views\o"
