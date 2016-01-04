@@ -1,3 +1,16 @@
+-------
+externals
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\externals\project" "D:\htdocs\_project_ommu_module_projects\externals\project"
+-------
+install
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\install" "D:\htdocs\_project_ommu_platform\install"
+-------
+libraries
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\libraries" "D:\htdocs\_project_ommu_platform\libraries"
+-------
 protected\modules
 =======
 mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\project.yaml" "D:\htdocs\_project_ommu_module_projects\modules\project\project.yaml"
