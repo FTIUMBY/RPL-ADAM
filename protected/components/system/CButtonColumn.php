@@ -6,9 +6,13 @@
  * @link http://www.yiiframework.com/
  * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * 
+ * @modify Putra Sudaryanto <putra@sudaryanto.id>
+ * @contect (+62)856-299-4114
+ *
  */
 
-Yii::import('zii.widgets.grid.CGridColumn');
+Yii::import('application.components.system.CGridColumn');
 
 /**
  * CButtonColumn represents a grid view column that renders one or several buttons.
@@ -152,7 +156,7 @@ class CButtonColumn extends CGridColumn
 	 * <pre>
 	 *  array(
 	 *     class'=>'CButtonColumn',
-	 *     'afterDelete'=>'function(link,success,data){ if(success) alert("Delete completed successfuly"); }',
+	 *     'afterDelete'=>'function(link,success,data){ if(success) alert("Delete completed successfully"); }',
 	 *  ),
 	 * </pre>
 	 */
@@ -309,13 +313,15 @@ EOD;
 	}
 
 	/**
-	 * Renders the data cell content.
+	 * Returns the data cell content.
 	 * This method renders the view, update and delete buttons in the data cell.
 	 * @param integer $row the row number (zero-based)
-	 * @param mixed $data the data associated with the row
+	 * @return string the data cell content.
+	 * @since 1.1.16
 	 */
-	protected function renderDataCellContent($row,$data)
+	public function getDataCellContent($row)
 	{
+		$data=$this->grid->dataProvider->data[$row];
 		$tr=array();
 		ob_start();
 		foreach($this->buttons as $id=>$button)
@@ -325,7 +331,7 @@ EOD;
 			ob_clean();
 		}
 		ob_end_clean();
-		echo strtr($this->template,$tr);
+		return strtr($this->template,$tr);
 	}
 
 	/**

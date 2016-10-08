@@ -1,9 +1,14 @@
 <?php
-
 /**
  * UserIdentity represents the data needed to identity a user.
  * It contains the authentication method that checks if the provided
  * data can identity the user.
+ * 
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
+ * @contect (+62)856-299-4114
+ *
  */
 class UserIdentity extends CUserIdentity
 {
@@ -20,29 +25,11 @@ class UserIdentity extends CUserIdentity
 	 */
 	public function authenticate()
 	{
-		$username = Users::model()->find(array(
-			//'select' => 'invite_id',
-			'condition' => 'username = :username AND enabled = :enabled AND verified = :verified',
-			'params' => array(
-				':username' => $this->username,
-				':enabled' => 1,
-				':verified' => 1,
-			),
-		));
-		if(empty($username)) {
-			$record = Users::model()->find(array(
-				//'select' => 'invite_id',
-				'condition' => 'email = :email AND enabled = :enabled AND verified = :verified',
-				'params' => array(
-					':email' => $this->username,
-					':enabled' => 1,
-					':verified' => 1,
-				),
-			));
-		} else {
-			$record = $username;
-		}
-
+		if(preg_match('/@/',$this->username)) //$this->username can filled by username or email
+			$record = Users::model()->findByAttributes(array('email' => $this->username));
+		else 
+			$record = Users::model()->findByAttributes(array('username' => $this->username));
+			
 		if($record === null) {
 			$this->errorCode = self::ERROR_USERNAME_INVALID;
 		} else if($record->password !== Users::hashPassword($record->salt,$this->password)) {
@@ -50,14 +37,11 @@ class UserIdentity extends CUserIdentity
 		} else {
 			$this->_id = $record->user_id;
 			$this->setState('level', $record->level_id);
-			$this->setState('username', $record->username);
+			$this->setState('profile', $record->profile_id);
+			$this->setState('language', $record->language_id);
 			$this->email = $record->email;
-			$this->setState('fname', $record->first_name);
-			$this->setState('lname', $record->last_name);
+			$this->setState('username', $record->username);
 			$this->setState('displayname', $record->displayname);
-			$this->setState('photo', $record->photo);
-			$this->setState('enabled', $record->enabled);
-			$this->setState('verified', $record->verified);
 			$this->setState('creation_date', $record->creation_date);
 			$this->setState('lastlogin_date', $record->lastlogin_date);
 			$this->errorCode = self::ERROR_NONE;

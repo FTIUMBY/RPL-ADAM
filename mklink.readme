@@ -1,7 +1,4 @@
--------
-externals
-=======
-mklink /J "D:\htdocs\_kampus_rpl_adam\externals\project" "D:\htdocs\_project_ommu_module_projects\externals\project"
+mklink /H "D:\htdocs\_kampus_rpl_adam\timthumb.php" "D:\htdocs\_project_ommu_platform\timthumb.php"
 -------
 install
 =======
@@ -11,9 +8,62 @@ libraries
 =======
 mklink /J "D:\htdocs\_kampus_rpl_adam\libraries" "D:\htdocs\_project_ommu_platform\libraries"
 -------
+protected
+=======
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\.htaccess" "D:\htdocs\_project_ommu_platform\protected\.htaccess"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\yiic" "D:\htdocs\_project_ommu_platform\protected\yiic"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\yiic.bat" "D:\htdocs\_project_ommu_platform\protected\yiic.bat"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\yiic.php" "D:\htdocs\_project_ommu_platform\protected\yiic.php"
+-------
+protected\components
+=======
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\components\Controller.php" "D:\htdocs\_project_ommu_platform\protected\components\Controller.php"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\components\ControllerApi.php" "D:\htdocs\_project_ommu_platform\protected\components\ControllerApi.php"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\components\UserIdentity.php" "D:\htdocs\_project_ommu_platform\protected\components\UserIdentity.php"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\components\admin" "D:\htdocs\_project_ommu_platform\protected\components\admin"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\components\plugin" "D:\htdocs\_project_ommu_platform\protected\components\plugin"
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\components\system" "D:\htdocs\_project_ommu_platform\protected\components\system"
+-------
+protected\controllers
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\controllers" "D:\htdocs\_project_ommu_platform\protected\controllers"
+-------
+protected\extensions
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\extensions" "D:\htdocs\_project_ommu_platform\protected\extensions"
+-------
+protected\messages
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\messages" "D:\htdocs\_project_ommu_platform\protected\messages"
+-------
+protected\models
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\models\core" "D:\htdocs\_project_ommu_platform\protected\models\core"
+-------
+protected\ommu
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\ommu" "D:\htdocs\_project_ommu_platform\protected\ommu"
+-------
+protected\vendors
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\vendors" "D:\htdocs\_project_ommu_platform\protected\vendors"
+-------
+protected\views
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\protected\views" "D:\htdocs\_project_ommu_platform\protected\views"
+-------
+themes
+=======
+mklink /J "D:\htdocs\_kampus_rpl_adam\themes\ommu" "D:\htdocs\_project_ommu_bootstrap\themes\ommu"
+
+
+-------
 protected\modules
 =======
+///project\\\
+mklink /J "D:\htdocs\_kampus_rpl_adam\externals\project" "D:\htdocs\_project_ommu_module_projects\externals\project"
 mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\project.yaml" "D:\htdocs\_project_ommu_module_projects\modules\project\project.yaml"
+mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\ProjectModule.php" "D:\htdocs\_project_ommu_module_projects\modules\project\ProjectModule.php"
 mklink /H "D:\htdocs\_kampus_rpl_adam\protected\modules\project\LICENSE" "D:\htdocs\_project_ommu_module_projects\modules\project\LICENSE"
 mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\assets" "D:\htdocs\_project_ommu_module_projects\modules\project\assets"
 mklink /J "D:\htdocs\_kampus_rpl_adam\protected\modules\project\components" "D:\htdocs\_project_ommu_module_projects\modules\project\components"

@@ -7,6 +7,10 @@
  * @link http://www.yiiframework.com/
  * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * 
+ * @modify Putra Sudaryanto <putra@sudaryanto.id>
+ * @contect (+62)856-299-4114
+ *
  */
 
 /**
@@ -22,12 +26,12 @@
  * $this->widget('application.components.system.CMenu', array(
  *     'items'=>array(
  *         // Important: you need to specify url as 'controller/action',
- *         // not just as 'controller' even if default acion is used.
+ *         // not just as 'controller' even if default action is used.
  *         array('label'=>'Home', 'url'=>array('site/index')),
  *         // 'Products' menu item will be selected no matter which tag parameter value is since it's not specified.
  *         array('label'=>'Products', 'url'=>array('product/index'), 'items'=>array(
- *             array('label'=>'New Arrivals', 'url'=>array('product/new', 'tag'=>'new')),
- *             array('label'=>'Most Popular', 'url'=>array('product/index', 'tag'=>'popular')),
+ *			 array('label'=>'New Arrivals', 'url'=>array('product/new', 'tag'=>'new')),
+ *			 array('label'=>'Most Popular', 'url'=>array('product/index', 'tag'=>'popular')),
  *         )),
  *         array('label'=>'Login', 'url'=>array('site/login'), 'visible'=>Yii::app()->user->isGuest),
  *     ),
@@ -46,8 +50,10 @@ class CMenu extends CWidget
 	 * @var array list of menu items. Each menu item is specified as an array of name-value pairs.
 	 * Possible option names include the following:
 	 * <ul>
-	 * <li>label: string, optional, specifies the menu item label. When {@link encodeLabel} is true, the label
+	 * <li>label: string, optional, specifies the menu item label. When {@link encodeLabel} or own encodeLabel option is true, the label
 	 * will be HTML-encoded. If the label is not specified, it defaults to an empty string.</li>
+	 * <li>encodeLabel: boolean whether the label for menu item should be HTML-encoded.
+	 * When this option is set, it will override the global setting {@link encodeLabel}. This option has been available since version 1.1.15.</li>
 	 * <li>url: string or array, optional, specifies the URL of the menu item. It is passed to {@link CHtml::normalizeUrl}
 	 * to generate a valid URL. If this is not set, the menu item will be rendered as a span text.</li>
 	 * <li>visible: boolean, optional, whether this menu item is visible. Defaults to true.
@@ -270,7 +276,8 @@ class CMenu extends CWidget
 			}
 			if(!isset($item['label']))
 				$item['label']='';
-			if($this->encodeLabel)
+			$encodeLabel = isset($item['encodeLabel']) ? $item['encodeLabel'] : $this->encodeLabel;
+			if($encodeLabel)
 				$items[$i]['label']=CHtml::encode($item['label']);
 			$hasActiveChild=false;
 			if(isset($item['items']))

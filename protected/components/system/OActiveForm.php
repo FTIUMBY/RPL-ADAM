@@ -6,6 +6,10 @@
  * @link http://www.yiiframework.com/
  * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
+ * 
+ * @modify Putra Sudaryanto <putra@sudaryanto.id>
+ * @contect (+62)856-299-4114
+ *
  */
 
 /**
@@ -122,7 +126,7 @@
  *     {
  *         $model->attributes=$_POST['User'];
  *         if($model->save())
- *             $this->redirect('index');
+ *			 $this->redirect('index');
  *     }
  *     $this->render('create',array('model'=>$model));
  * }
@@ -161,7 +165,7 @@ class OActiveForm extends CWidget
 	 */
 	public $stateful=false;
 	/**
-	 * @var string the CSS class name for error messages. 
+	 * @var string the CSS class name for error messages.
 	 * Since 1.1.14 this defaults to 'errorMessage' defined in {@link CHtml::$errorMessageCss}.
 	 * Individual {@link error} call may override this value by specifying the 'class' HTML option.
 	 */
@@ -331,7 +335,7 @@ class OActiveForm extends CWidget
 			echo CHtml::statefulForm($this->action, $this->method, $this->htmlOptions);
 		else
 			echo CHtml::beginForm($this->action, $this->method, $this->htmlOptions);
-			
+
 		if($this->errorMessageCssClass===null)
 			$this->errorMessageCssClass=CHtml::$errorMessageCss;
 	}
@@ -414,9 +418,9 @@ class OActiveForm extends CWidget
 	 * <ul>
 	 * <li>inputID</li>
 	 * </ul>
-	 * When an CActiveForm input field uses a custom ID, for ajax/client validation to work properly 
+	 * When an CActiveForm input field uses a custom ID, for ajax/client validation to work properly
 	 * inputID should be set to the same ID
-	 * 
+	 *
 	 * Example:
 	 * <pre>
 	 * <div class="form-element">
@@ -425,7 +429,7 @@ class OActiveForm extends CWidget
 	 *    <?php echo $form->error($model,'attribute',array('inputID'=>'custom-id')); ?>
 	 * </div>
 	 * </pre>
-	 * 
+	 *
 	 * When client-side validation is enabled, an option named "clientValidation" is also recognized.
 	 * This option should take a piece of JavaScript code to perform client-side validation. In the code,
 	 * the variables are predefined:
@@ -519,7 +523,10 @@ class OActiveForm extends CWidget
 				$option['clientValidation']=new CJavaScriptExpression("function(value, messages, attribute) {\n".implode("\n",$validators)."\n}");
 		}
 
-		$html=CHtml::error($model,$attribute,$htmlOptions);
+		if(empty($option['hideErrorMessage']) && empty($this->clientOptions['hideErrorMessage']))
+			$html=CHtml::error($model,$attribute,$htmlOptions);
+		else
+			$html='';
 		if($html==='')
 		{
 			if(isset($htmlOptions['style']))
@@ -699,9 +706,73 @@ class OActiveForm extends CWidget
 	}
 
 	/**
-	 * Renders a time field for a model attribute.
-	 * This method is a wrapper of {@link CHtml::activeTimeField}.
-	 * Please check {@link CHtml::activeTimeField} for detailed information
+	 * Renders a datetime field for a model attribute.
+	 * This method is a wrapper of {@link CHtml::activeDateTimeField}.
+	 * Please check {@link CHtml::activeDateTimeField} for detailed information
+	 * about the parameters for this method.
+	 * @param CModel $model the data model
+	 * @param string $attribute the attribute
+	 * @param array $htmlOptions additional HTML attributes.
+	 * @return string the generated input field
+	 * @since 1.1.16
+	 */
+	public function dateTimeField($model,$attribute,$htmlOptions=array())
+	{
+		return CHtml::activeDateTimeField($model,$attribute,$htmlOptions);
+	}
+
+	/**
+	 * Renders a local datetime field for a model attribute.
+	 * This method is a wrapper of {@link CHtml::activeDateTimeLocalField}.
+	 * Please check {@link CHtml::activeDateTimeLocalField} for detailed information
+	 * about the parameters for this method.
+	 * @param CModel $model the data model
+	 * @param string $attribute the attribute
+	 * @param array $htmlOptions additional HTML attributes.
+	 * @return string the generated input field
+	 * @since 1.1.16
+	 */
+	public function dateTimeLocalField($model,$attribute,$htmlOptions=array())
+	{
+		return CHtml::activeDateTimeLocalField($model,$attribute,$htmlOptions);
+	}
+
+	/**
+	 * Renders a week field for a model attribute.
+	 * This method is a wrapper of {@link CHtml::activeWeekField}.
+	 * Please check {@link CHtml::activeWeekField} for detailed information
+	 * about the parameters for this method.
+	 * @param CModel $model the data model
+	 * @param string $attribute the attribute
+	 * @param array $htmlOptions additional HTML attributes.
+	 * @return string the generated input field
+	 * @since 1.1.16
+	 */
+	public function weekField($model,$attribute,$htmlOptions=array())
+	{
+		return CHtml::activeWeekField($model,$attribute,$htmlOptions);
+	}
+
+	/**
+	 * Renders a color picker field for a model attribute.
+	 * This method is a wrapper of {@link CHtml::activeColorField}.
+	 * Please check {@link CHtml::activeColorField} for detailed information
+	 * about the parameters for this method.
+	 * @param CModel $model the data model
+	 * @param string $attribute the attribute
+	 * @param array $htmlOptions additional HTML attributes.
+	 * @return string the generated input field
+	 * @since 1.1.16
+	 */
+	public function colorField($model,$attribute,$htmlOptions=array())
+	{
+		return CHtml::activeColorField($model,$attribute,$htmlOptions);
+	}
+
+	/**
+	 * Renders a tel field for a model attribute.
+	 * This method is a wrapper of {@link CHtml::activeTelField}.
+	 * Please check {@link CHtml::activeTelField} for detailed information
 	 * about the parameters for this method.
 	 * @param CModel $model the data model
 	 * @param string $attribute the attribute

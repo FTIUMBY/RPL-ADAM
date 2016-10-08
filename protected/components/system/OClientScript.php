@@ -2,11 +2,14 @@
 /**
  * OClientScript class file.
  *
- * @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
  * @create date Maret 1, 2014 14:02 WIB
  * @updated date Maret 1, 2014 15:50 WIB
  * @version 1.0.1
- * @copyright &copy; 2014 Ommu Platform
+ * @copyright Copyright (c) 2014 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
+ * @contect (+62)856-299-4114
+ *
  */
  
 Yii::import('system.web.CClientScript');
@@ -35,12 +38,27 @@ class OClientScript extends CClientScript
 	{
 		//$return = array();
 		//$return = $this->cssFiles;
-		$return = '';
+		$return = '';		
+		//print_r($this->cssFiles);
 		if(!empty($this->cssFiles)) {
 			foreach($this->cssFiles as $key=>$val) {
 				if((is_string($key)) || is_array($val))
-					$cssFile = $this->getProtocol()."://".Yii::app()->request->serverName.$key;
+					if($key == $row)
+						$cssFile = $this->getProtocol()."://".Yii::app()->request->serverName.$key;
 					$return .= '@import url("'.$cssFile.'");';
+			}
+		}
+		
+		//$return = $this->coreScripts;
+		//print_r($this->coreScripts);
+		if(!empty($this->coreScripts)) {
+			foreach($this->coreScripts as $key=>$val) {
+				if((is_string($key) && $key != 'jquery') && is_array($val)) {
+				//if((is_string($key)) && is_array($val))
+					if($val['css'] != null && $val['baseUrl'] != null)
+						$cssFile = $this->getProtocol()."://".Yii::app()->request->serverName.$val['baseUrl'].'/'.$val['css'][0];
+					$return .= '@import url("'.$cssFile.'");';
+				}
 			}
 		}
 		return $return;
@@ -53,21 +71,29 @@ class OClientScript extends CClientScript
 	{
 		$return = array();
 		//$return = $this->coreScripts;
+		//print_r($this->coreScripts);
 		if(!empty($this->coreScripts)) {
 			foreach($this->coreScripts as $key=>$val) {
-				if((is_string($key) && $key != 'jquery') && is_array($val))
+				if((is_string($key) && $key != 'jquery') && is_array($val)) {
 				//if((is_string($key)) && is_array($val))
-					$return[] = /*$this->getProtocol()."://".Yii::app()->request->serverName.*/$this->getCoreScriptUrl().'/'.$val['js'][0];
+					if($val['baseUrl'] != null)
+						$return[] = /*$this->getProtocol()."://".Yii::app()->request->serverName.*/$val['baseUrl'].'/'.$val['js'][0];
+					else 
+						$return[] = /*$this->getProtocol()."://".Yii::app()->request->serverName.*/$this->getCoreScriptUrl().'/'.$val['js'][0];
+				}
 			}
 		}
+		//echo '===========================================';
 		
 		//$return = $this->scriptFiles;
+		//print_r($this->scriptFiles);
 		if(!empty($this->scriptFiles)) {
 			foreach($this->scriptFiles as $key=>$val) {
 				if((is_string($key)) || is_array($val)) {
 					if(!empty($val)) {
 						foreach($val as $key=>$row)
-							$return[] = /*$this->getProtocol()."://".Yii::app()->request->serverName.*/$key;
+							if($key == $row || $row==null)
+								$return[] = /*$this->getProtocol()."://".Yii::app()->request->serverName.*/$key;
 					}
 				}
 			}
@@ -104,7 +130,7 @@ class OClientScript extends CClientScript
 		$module = strtolower(Yii::app()->controller->module->id);
 		$controller = strtolower(Yii::app()->controller->id);
 		$action = strtolower(Yii::app()->controller->action->id);
-		if(!empty($_GET)) {
+		if(isset($_GET)) {
 			$attr = array_merge($_GET, array('protocol'=>'script'));
 		} else {
 			$attr = array('protocol'=>'script');
