@@ -1,26 +1,28 @@
 <?php
 /**
- * AdminController
- * @var $this AdminController
+ * WalluserController
+ * @var $this WalluserController
+ * @var $model OmmuWallUser
+ * @var $form CActiveForm
  * version: 1.1.0
  * Reference start
  *
  * TOC :
  *	Index
- *	Dashboard
+ *	Manage
  *
  *	LoadModel
  *	performAjaxValidation
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
- * @contact (+62)856-299-4114
+ * @contect (+62)856-299-4114
  *
  *----------------------------------------------------------------------------------------------------------
  */
 
-class AdminController extends Controller
+class WalluserController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -40,7 +42,7 @@ class AdminController extends Controller
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
 			} else {
-				throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
+				$this->redirect(Yii::app()->createUrl('site/login'));
 			}
 		} else {
 			$this->redirect(Yii::app()->createUrl('site/login'));
@@ -74,16 +76,12 @@ class AdminController extends Controller
 				'actions'=>array(),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level)',
+				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('dashboard'),
+				'actions'=>array('manage'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && in_array(Yii::app()->user->level, array(1,2))',
-			),
-			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array(),
-				'users'=>array('@'),
-				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
 				'actions'=>array(),
@@ -100,54 +98,61 @@ class AdminController extends Controller
 	 */
 	public function actionIndex() 
 	{
-		$this->redirect(array('dashboard'));
+		$this->redirect(array('manage'));
 	}
 
 	/**
 	 * Manages all models.
 	 */
-	public function actionDashboard() 
+	public function actionManage() 
 	{
-		/* Wall Post */
-		$model=new OmmuWalls;
+		$model=new OmmuWallUser('search');
+		$model->unsetAttributes();  // clear any default values
+		if(isset($_GET['OmmuWallUser'])) {
+			$model->attributes=$_GET['OmmuWallUser'];
+		}
 
-		/* Get Walll */
-		$criteria=new CDbCriteria; 
-		$criteria->condition = 'publish = :publish'; 
-		$criteria->params = array(':publish'=>1); 
-		$criteria->order = 'creation_date DESC'; 
-
-		$dataProvider = new CActiveDataProvider('OmmuWalls', array( 
-			'criteria'=>$criteria, 
-			'pagination'=>array( 
-				'pageSize'=>5, 
-			), 
-		));
-		
-		$data = '';
-		$wall = $dataProvider->getData();
-		if(!empty($wall)) {
-			foreach($wall as $key => $item) {
-				$data .= Utility::otherDecode($this->renderPartial('/wall/_view', array('data'=>$item), true, false));
+		$columnTemp = array();
+		if(isset($_GET['GridColumn'])) {
+			foreach($_GET['GridColumn'] as $key => $val) {
+				if($_GET['GridColumn'][$key] == 1) {
+					$columnTemp[] = $key;
+				}
 			}
 		}
-		$pager = OFunction::getDataProviderPager($dataProvider);
-		if($pager[nextPage] != '0') {
-			$summaryPager = 'Displaying 1-'.($pager[currentPage]*$pager[pageSize]).' of '.$pager[itemCount].' results.';
-		} else {
-			$summaryPager = 'Displaying 1-'.$pager[itemCount].' of '.$pager[itemCount].' results.';
-		}
-		$nextPager = $pager['nextPage'] != 0 ? Yii::app()->createUrl('wall/get', array($pager['pageVar']=>$pager['nextPage'])) : 0;
-		
-		$this->pageTitle = Yii::t('phrase', 'Welcome').', '.Yii::app()->user->displayname.'!';
-		$this->pageDescription = Yii::t('phrase', 'Welcome to your social network control panel. Here you can manage and modify every aspect of your social network. Directly below, you will find a quick snapshot of your social network including some useful statistics.');
+		$columns = $model->getGridColumn($columnTemp);
+
+		$this->pageTitle = 'Ommu Wall Users Manage';
+		$this->pageDescription = '';
 		$this->pageMeta = '';
-		$this->render('application.webs.admin.admin_dashboard', array(
-			'model'=>$model,			
-			'data'=>$data,
-			'pager'=>$pager,
-			'summaryPager'=>$summaryPager,
-			'nextPager'=>$nextPager,
+		$this->render('/wall_user/admin_manage',array(
+			'model'=>$model,
+			'columns' => $columns,
 		));
-	}	
+	}
+
+	/**
+	 * Returns the data model based on the primary key given in the GET variable.
+	 * If the data model is not found, an HTTP exception will be raised.
+	 * @param integer the ID of the model to be loaded
+	 */
+	public function loadModel($id) 
+	{
+		$model = OmmuWallUser::model()->findByPk($id);
+		if($model===null)
+			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
+		return $model;
+	}
+
+	/**
+	 * Performs the AJAX validation.
+	 * @param CModel the model to be validated
+	 */
+	protected function performAjaxValidation($model) 
+	{
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-wall-user-form') {
+			echo CActiveForm::validate($model);
+			Yii::app()->end();
+		}
+	}
 }

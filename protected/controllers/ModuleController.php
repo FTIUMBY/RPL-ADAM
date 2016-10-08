@@ -1,18 +1,18 @@
 <?php
 /**
- * ThemeController
- * @var $this ThemeController
- * @var $model OmmuThemes
- * @var $form CActiveForm
+ * ModuleController
+ * Handle ModuleController
  * version: 1.1.0
  * Reference start
  *
  * TOC :
+ *	updateModule
  *	Index
  *	Manage
  *	Add
  *	Edit
  *	Delete
+ *	Active
  *	Default
  *
  *	LoadModel
@@ -26,14 +26,15 @@
  *----------------------------------------------------------------------------------------------------------
  */
 
-class ThemeController extends Controller
+class ModuleController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
 	 * using two-column layout. See 'protected/views/layouts/column2.php'.
 	 */
 	//public $layout='//layouts/column2';
-	public $defaultAction = 'index';
+	public $defaultAction = 'index';	
+	public $moduleHandle;
 
 	/**
 	 * Initialize admin page theme
@@ -45,6 +46,8 @@ class ThemeController extends Controller
 				$arrThemes = Utility::getCurrentTemplate('admin');
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
+				
+				$this->moduleHandle = Yii::app()->moduleHandle;
 			} else {
 				throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 			}
@@ -82,7 +85,7 @@ class ThemeController extends Controller
 				'expression'=>'isset(Yii::app()->user->level)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','delete','default'),
+				'actions'=>array('manage','upload','add','edit','install','delete','active','default'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
@@ -94,6 +97,19 @@ class ThemeController extends Controller
 				'users'=>array('*'),
 			),
 		);
+	}
+
+	/**
+	 * Cache module, update and install to file
+	 */
+	public function updateModule($deleted=false)
+	{
+		$this->moduleHandle->cacheModuleConfig();
+		if(!$deleted) {
+			$this->moduleHandle->updateModuleAddonFromDir();
+			$this->moduleHandle->setModuleToDb();
+		}
+		$this->moduleHandle->updateModuleAddon();
 	}
 	
 	/**
@@ -108,11 +124,14 @@ class ThemeController extends Controller
 	 * Manages all models.
 	 */
 	public function actionManage() 
-	{
-		$model=new OmmuThemes('search');
+	{		
+		//Update module add-on
+		$this->updateModule();
+		
+		$model=new OmmuPlugins('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuThemes'])) {
-			$model->attributes=$_GET['OmmuThemes'];
+		if(isset($_GET['OmmuPlugins'])) {
+			$model->attributes=$_GET['OmmuPlugins'];
 		}
 
 		$columnTemp = array();
@@ -125,8 +144,8 @@ class ThemeController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = Yii::t('phrase', 'Manage Themes');
-		$this->pageDescription = Yii::t('phrase', 'You have complete control over the look and feel of your social network. The PHP code that powers your social network is completely separate from the HTML code used for presentation. Your HTML code is stored in the templates listed below, which can be edited directly on this page. To edit a template, simply click it\'s name.');
+		$this->pageTitle = Yii::t('phrase', 'Manage Modules');
+		$this->pageDescription = Yii::t('phrase', 'Any SocialEngine plugins that you have installed will appear on this page. Note that some plugins may have user level-specific settings which are available on the User Levels page.');
 		$this->pageMeta = '';
 		$this->render('admin_manage',array(
 			'model'=>$model,
@@ -139,15 +158,64 @@ class ThemeController extends Controller
 	 * Creates a new model.
 	 * If creation is successful, the browser will be redirected to the 'view' page.
 	 */
+	public function actionUpload() 
+	{
+		$runtimePath = Yii::app()->runtimePath;
+
+		// Upload and extract yii module
+		if(isset($_FILES['module_file'])) {
+			$fileName = CUploadedFile::getInstanceByName('module_file');
+			echo $fileName->type;
+
+			if(strpos($fileName->type, 'zip') !== false) {
+				if($fileName->saveAs($runtimePath.'/'.$fileName->name)) {
+					$zip        = new ZipArchive;
+					$zipFile    = $zip->open($runtimePath.'/'.$fileName->name);
+					$extractTo  = explode('.', $fileName->name);
+					@chmod($runtimePath.'/'.$fileName->name, 0777);
+
+					if($zipFile == true) {
+						if($zip->extractTo(Yii::getPathOfAlias('application.modules'))) {
+							Utility::chmodr(Yii::getPathOfAlias('application.modules').'/'.$extractTo[0], 0777);
+							$this->redirect(array('manage','type'=>'all'));
+							Yii::app()->user->setFlash('success', Yii::t('phrase', 'Module sukses diextract.'));
+						}
+						$zip->close();
+						Utility::recursiveDelete($runtimePath.'/'.$fileName->name);
+					}
+
+				} else {
+					Yii::app()->user->setFlash('error', Yii::t('phrase', 'Gagal mengupload file.'));				
+				}
+			} else {
+				Yii::app()->user->setFlash('error', Yii::t('phrase', 'Hanya file .zip yang dibolehkan.'));
+			}
+		}
+		
+		$this->dialogDetail = true;
+		$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+		$this->dialogWidth = 400;
+		
+		$this->pageTitle = Yii::t('phrase', 'Upload Module');
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('admin_upload');
+	}
+	
+	/**
+	 * Creates a new model.
+	 * If creation is successful, the browser will be redirected to the 'view' page.
+	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuThemes;
+		$model=new OmmuPlugins;
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuThemes'])) {
-			$model->attributes=$_POST['OmmuThemes'];
+		if(isset($_POST['OmmuPlugins'])) {
+			$model->attributes=$_POST['OmmuPlugins'];
+			$model->scenario = 'adminadd';
 
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -158,8 +226,8 @@ class ThemeController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-themes',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Theme success created.').'</strong></div>',
+							'id' => 'partial-ommu-plugins',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success created.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -173,7 +241,7 @@ class ThemeController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 500;
 			
-			$this->pageTitle = Yii::t('phrase', 'Add Theme');
+			$this->pageTitle = Yii::t('phrase', 'Add Module');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
 			$this->render('admin_add',array(
@@ -194,8 +262,8 @@ class ThemeController extends Controller
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuThemes'])) {
-			$model->attributes=$_POST['OmmuThemes'];
+		if(isset($_POST['OmmuPlugins'])) {
+			$model->attributes=$_POST['OmmuPlugins'];
 
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -206,8 +274,8 @@ class ThemeController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-themes',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Theme success updated.').'</strong></div>',
+							'id' => 'partial-ommu-plugins',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success updated.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -221,12 +289,48 @@ class ThemeController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 500;
 			
-			$this->pageTitle = Yii::t('phrase', 'Update Theme: {theme}', array('{theme}'=>$model->name));
+			$this->pageTitle = Yii::t('phrase', 'Update Module: {module}', array('{module}'=>$model->name));
 			$this->pageDescription = '';
 			$this->pageMeta = '';
 			$this->render('admin_edit',array(
 				'model'=>$model,
 			));
+		}
+	}
+
+	/**
+	 * Install module
+	 */
+	public function actionInstall($id)
+	{
+		$model=$this->loadModel($id);
+		
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				//change value install
+				$model->install = 1;
+
+				if($model->update()) {
+					$this->moduleHandle->installModule($model->plugin_id, $model->folder);					
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-plugins',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success installed.').'</strong></div>',
+					));
+				}
+			}
+		
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = Yii::t('phrase', 'Install Module');
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('admin_install');			
 		}
 	}
 	
@@ -240,14 +344,16 @@ class ThemeController extends Controller
 		if(Yii::app()->request->isPostRequest) {
 			// we only allow deletion via POST request
 			if(isset($id)) {
-				$this->loadModel($id)->delete();
-
-				echo CJSON::encode(array(
-					'type' => 5,
-					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-ommu-themes',
-					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Theme success deleted.').'</strong></div>',
-				));
+				$model = $this->loadModel($id);
+				if($model->delete()) {
+					$this->moduleHandle->deleteModule($model->folder);
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-plugins',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success deleted.').'</strong></div>',
+					));					
+				}
 			}
 
 		} else {
@@ -255,10 +361,57 @@ class ThemeController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = Yii::t('phrase', 'Delete Theme');
+			$this->pageTitle = Yii::t('phrase', 'Delete Module');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
 			$this->render('admin_delete');
+		}
+	}
+
+	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionActive($id) 
+	{
+		$model=$this->loadModel($id);
+		if($model->actived == 1) {
+			$title = Yii::t('phrase', 'Deactived');
+			$replace = 0;
+		} else {
+			$title = Yii::t('phrase', 'Actived');
+			$replace = 1;
+		}
+
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				//change value active or publish
+				$model->actived = $replace;
+
+				if($model->save()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-plugins',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success updated.').'</strong></div>',
+					));
+				}
+			}
+
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = $title;
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('admin_active',array(
+				'title'=>$title,
+				'model'=>$model,
+			));
 		}
 	}
 
@@ -275,14 +428,14 @@ class ThemeController extends Controller
 			// we only allow deletion via POST request
 			if(isset($id)) {
 				//change value active or publish
-				$model->default_theme = 1;
+				$model->defaults = 1;
 
-				if($model->save()) {
+				if($model->update()) {
 					echo CJSON::encode(array(
 						'type' => 5,
 						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-ommu-themes',
-						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Theme success updated.').'</strong></div>',
+						'id' => 'partial-ommu-plugins',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Module success updated.').'</strong></div>',
 					));
 				}
 			}
@@ -292,7 +445,7 @@ class ThemeController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = Yii::t('phrase', 'Defaults');
+			$this->pageTitle = Yii::t('phrase', 'Default');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
 			$this->render('admin_default',array(
@@ -308,7 +461,7 @@ class ThemeController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuThemes::model()->findByPk($id);
+		$model = OmmuPlugins::model()->findByPk($id);
 		if($model===null)
 			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
@@ -320,7 +473,7 @@ class ThemeController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-themes-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-plugins-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

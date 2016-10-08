@@ -1,32 +1,31 @@
 <?php
 /**
- * GlobaltagController
- * Handle GlobaltagController
+ * WalllikeController
+ * @var $this WalllikeController
+ * @var $model OmmuWallLikes
+ * @var $form CActiveForm
  * version: 1.1.0
  * Reference start
  *
  * TOC :
  *	Index
- *	Suggest
  *	Manage
  *	Add
  *	Edit
- *	RunAction
  *	Delete
- *	Publish
  *
  *	LoadModel
  *	performAjaxValidation
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
- * @contact (+62)856-299-4114
+ * @contect (+62)856-299-4114
  *
  *----------------------------------------------------------------------------------------------------------
  */
 
-class GlobaltagController extends Controller
+class WalllikeController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -46,7 +45,7 @@ class GlobaltagController extends Controller
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
 			} else {
-				throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
+				$this->redirect(Yii::app()->createUrl('site/login'));
 			}
 		} else {
 			$this->redirect(Yii::app()->createUrl('site/login'));
@@ -77,13 +76,13 @@ class GlobaltagController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('suggest'),
+				'actions'=>array(),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level)',
 				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','runaction','delete','publish'),
+				'actions'=>array('manage','add','edit','delete'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && in_array(Yii::app()->user->level, array(1,2))',
 			),
@@ -104,43 +103,16 @@ class GlobaltagController extends Controller
 	{
 		$this->redirect(array('manage'));
 	}
-	
-	/**
-	 * Updates a particular model.
-	 * If update is successful, the browser will be redirected to the 'view' page.
-	 * @param integer $id the ID of the model to be updated
-	 */
-	public function actionSuggest($limit=10) {
-		if(isset($_GET['term'])) {
-			$criteria = new CDbCriteria;
-			$criteria->condition = 'publish = 1 AND body LIKE :body';
-			$criteria->select	= "tag_id, body";
-			$criteria->limit = $limit;
-			$criteria->order = "tag_id ASC";
-			$criteria->params = array(':body' => '%' . strtolower($_GET['term']) . '%');
-			$model = OmmuTags::model()->findAll($criteria);
-
-			if($model) {
-				foreach($model as $items) {
-					$result[] = array('id' => $items->tag_id, 'value' => $items->body);
-				}
-			} else {
-				$result[] = array('id' => 0, 'value' => $_GET['term']);
-			}
-		}
-		echo CJSON::encode($result);
-		Yii::app()->end();
-	}
 
 	/**
 	 * Manages all models.
 	 */
 	public function actionManage() 
 	{
-		$model=new OmmuTags('search');
+		$model=new OmmuWallLikes('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuTags'])) {
-			$model->attributes=$_GET['OmmuTags'];
+		if(isset($_GET['OmmuWallLikes'])) {
+			$model->attributes=$_GET['OmmuWallLikes'];
 		}
 
 		$columnTemp = array();
@@ -153,10 +125,10 @@ class GlobaltagController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = Yii::t('phrase', 'Tags Manage');
+		$this->pageTitle = 'Ommu Wall Likes Manage';
 		$this->pageDescription = '';
 		$this->pageMeta = '';
-		$this->render('/global_tag/admin_manage',array(
+		$this->render('/wall_like/admin_manage',array(
 			'model'=>$model,
 			'columns' => $columns,
 		));
@@ -168,13 +140,13 @@ class GlobaltagController extends Controller
 	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuTags;
+		$model=new OmmuWallLikes;
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuWallLikes'])) {
+			$model->attributes=$_POST['OmmuWallLikes'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -186,8 +158,8 @@ class GlobaltagController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success created.').'</strong></div>',
+							'id' => 'partial-ommu-wall-likes',
+							'msg' => '<div class="errorSummary success"><strong>OmmuWallLikes success created.</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -199,12 +171,12 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = Yii::t('phrase', 'Create Tag');
+			$this->dialogWidth = 600;
+
+			$this->pageTitle = 'Create Ommu Wall Likes';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_add',array(
+			$this->render('/wall_like/admin_add',array(
 				'model'=>$model,
 			));
 		}
@@ -222,8 +194,8 @@ class GlobaltagController extends Controller
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuWallLikes'])) {
+			$model->attributes=$_POST['OmmuWallLikes'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -235,8 +207,8 @@ class GlobaltagController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+							'id' => 'partial-ommu-wall-likes',
+							'msg' => '<div class="errorSummary success"><strong>OmmuWallLikes success updated.</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -248,53 +220,17 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = Yii::t('phrase', 'Update Tag');
+			$this->dialogWidth = 600;
+
+			$this->pageTitle = 'Update Ommu Wall Likes';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_edit',array(
+			$this->render('/wall_like/admin_edit',array(
 				'model'=>$model,
 			));
 		}
 	}
-
-	/**
-	 * Displays a particular model.
-	 * @param integer $id the ID of the model to be displayed
-	 */
-	public function actionRunAction() {
-		$id       = $_POST['trash_id'];
-		$criteria = null;
-		$actions  = $_GET['action'];
-
-		if(count($id) > 0) {
-			$criteria = new CDbCriteria;
-			$criteria->addInCondition('id', $id);
-
-			if($actions == 'publish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 1,
-				),$criteria);
-			} elseif($actions == 'unpublish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 0,
-				),$criteria);
-			} elseif($actions == 'trash') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 2,
-				),$criteria);
-			} elseif($actions == 'delete') {
-				OmmuTags::model()->deleteAll($criteria);
-			}
-		}
-
-		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-		if(!isset($_GET['ajax'])) {
-			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('manage'));
-		}
-	}
-
+	
 	/**
 	 * Deletes a particular model.
 	 * If deletion is successful, the browser will be redirected to the 'admin' page.
@@ -302,59 +238,17 @@ class GlobaltagController extends Controller
 	 */
 	public function actionDelete($id) 
 	{
-		if(Yii::app()->request->isPostRequest) {
-			// we only allow deletion via POST request
-			if(isset($id)) {
-				$this->loadModel($id)->delete();
-
-				echo CJSON::encode(array(
-					'type' => 5,
-					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-ommu-tags',
-					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success deleted.').'</strong></div>',
-				));
-			}
-
-		} else {
-			$this->dialogDetail = true;
-			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 350;
-
-			$this->pageTitle = Yii::t('phrase', 'Delete Tag');
-			$this->pageDescription = '';
-			$this->pageMeta = '';
-			$this->render('/global_tag/admin_delete');
-		}
-	}
-
-	/**
-	 * Deletes a particular model.
-	 * If deletion is successful, the browser will be redirected to the 'admin' page.
-	 * @param integer $id the ID of the model to be deleted
-	 */
-	public function actionPublish($id) 
-	{
 		$model=$this->loadModel($id);
-		if($model->publish == 1) {
-			$title = Yii::t('phrase', 'Unpublish');
-			$replace = 0;
-		} else {
-			$title = Yii::t('phrase', 'Publish');
-			$replace = 1;
-		}
-
+		
 		if(Yii::app()->request->isPostRequest) {
 			// we only allow deletion via POST request
 			if(isset($id)) {
-				//change value active or publish
-				$model->publish = $replace;
-
-				if($model->update()) {
+				if($model->delete()) {
 					echo CJSON::encode(array(
 						'type' => 5,
 						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-ommu-tags',
-						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+						'id' => 'partial-ommu-wall-likes',
+						'msg' => '<div class="errorSummary success"><strong>OmmuWallLikes success deleted.</strong></div>',
 					));
 				}
 			}
@@ -364,13 +258,10 @@ class GlobaltagController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = $title;
+			$this->pageTitle = 'OmmuWallLikes Delete.';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_publish',array(
-				'title'=>$title,
-				'model'=>$model,
-			));
+			$this->render('/wall_like/admin_delete');
 		}
 	}
 
@@ -381,7 +272,7 @@ class GlobaltagController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuTags::model()->findByPk($id);
+		$model = OmmuWallLikes::model()->findByPk($id);
 		if($model===null)
 			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
@@ -393,7 +284,7 @@ class GlobaltagController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-tags-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-wall-likes-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

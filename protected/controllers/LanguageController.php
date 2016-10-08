@@ -1,19 +1,18 @@
 <?php
 /**
- * GlobaltagController
- * Handle GlobaltagController
+ * LanguageController
+ * Handle LanguageController
  * version: 1.1.0
  * Reference start
  *
  * TOC :
  *	Index
- *	Suggest
+ *	Settings
  *	Manage
  *	Add
  *	Edit
- *	RunAction
  *	Delete
- *	Publish
+ *	Actived
  *
  *	LoadModel
  *	performAjaxValidation
@@ -26,7 +25,7 @@
  *----------------------------------------------------------------------------------------------------------
  */
 
-class GlobaltagController extends Controller
+class LanguageController extends /*SBaseController*/ Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -41,7 +40,7 @@ class GlobaltagController extends Controller
 	public function init() 
 	{
 		if(!Yii::app()->user->isGuest) {
-			if(in_array(Yii::app()->user->level, array(1,2))) {
+			if(Yii::app()->user->level == 1) {
 				$arrThemes = Utility::getCurrentTemplate('admin');
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
@@ -77,15 +76,14 @@ class GlobaltagController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('suggest'),
+				'actions'=>array(),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level)',
-				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','runaction','delete','publish'),
+				'actions'=>array('settings','manage','add','edit','delete','actived'),
 				'users'=>array('@'),
-				'expression'=>'isset(Yii::app()->user->level) && in_array(Yii::app()->user->level, array(1,2))',
+				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
 				'actions'=>array(),
@@ -104,32 +102,37 @@ class GlobaltagController extends Controller
 	{
 		$this->redirect(array('manage'));
 	}
-	
-	/**
-	 * Updates a particular model.
-	 * If update is successful, the browser will be redirected to the 'view' page.
-	 * @param integer $id the ID of the model to be updated
-	 */
-	public function actionSuggest($limit=10) {
-		if(isset($_GET['term'])) {
-			$criteria = new CDbCriteria;
-			$criteria->condition = 'publish = 1 AND body LIKE :body';
-			$criteria->select	= "tag_id, body";
-			$criteria->limit = $limit;
-			$criteria->order = "tag_id ASC";
-			$criteria->params = array(':body' => '%' . strtolower($_GET['term']) . '%');
-			$model = OmmuTags::model()->findAll($criteria);
 
-			if($model) {
-				foreach($model as $items) {
-					$result[] = array('id' => $items->tag_id, 'value' => $items->body);
-				}
+	/**
+	 * Manages all models.
+	 */
+	public function actionSettings() 
+	{
+		$setting = OmmuSettings::model()->findByPk(1);
+
+		// Uncomment the following line if AJAX validation is needed
+		$this->performAjaxValidation($setting);
+
+		if(isset($_POST['OmmuSettings'])) {
+			$setting->attributes=$_POST['OmmuSettings'];
+
+			$jsonError = CActiveForm::validate($setting);
+			if(strlen($jsonError) > 2) {
+				echo $jsonError;
 			} else {
-				$result[] = array('id' => 0, 'value' => $_GET['term']);
+				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
+					if($setting->save()) {
+						echo CJSON::encode(array(
+							'type' => 0,
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Language setting success updated.').'</strong></div>',
+						));
+					} else {
+						print_r($setting->getErrors());
+					}
+				}
 			}
+			Yii::app()->end();
 		}
-		echo CJSON::encode($result);
-		Yii::app()->end();
 	}
 
 	/**
@@ -137,10 +140,12 @@ class GlobaltagController extends Controller
 	 */
 	public function actionManage() 
 	{
-		$model=new OmmuTags('search');
+		$setting = OmmuSettings::model()->findByPk(1);
+
+		$model=new OmmuLanguages('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuTags'])) {
-			$model->attributes=$_GET['OmmuTags'];
+		if(isset($_GET['OmmuLanguages'])) {
+			$model->attributes=$_GET['OmmuLanguages'];
 		}
 
 		$columnTemp = array();
@@ -153,12 +158,13 @@ class GlobaltagController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = Yii::t('phrase', 'Tags Manage');
-		$this->pageDescription = '';
+		$this->pageTitle = Yii::t('phrase', 'Language Settings');
+		$this->pageDescription = Yii::t('phrase', 'The layout of your social network includes hundreds of phrases of text which are stored in a language pack. SocialEngine comes with an English pack which is the default when you first install the platform. If you want to change any of these phrases on your social network, you can edit the pack below. If you want to allow users to pick from multiple languages, you can also create additional packs below. If you have multiple language packs, the pack you\'ve selected as your "default" will be the language that displays if a user has not selected any other language. Note: You can not delete the default language. To edit a language\'s details, click its name.');
 		$this->pageMeta = '';
-		$this->render('/global_tag/admin_manage',array(
+		$this->render('admin_manage',array(
 			'model'=>$model,
 			'columns' => $columns,
+			'setting' => $setting,
 		));
 	}	
 	
@@ -168,26 +174,25 @@ class GlobaltagController extends Controller
 	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuTags;
+		$model=new OmmuLanguages;
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
-			
+		if(isset($_POST['OmmuLanguages'])) {
+			$model->attributes=$_POST['OmmuLanguages'];
+
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
 				echo $jsonError;
-
 			} else {
 				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
 					if($model->save()) {
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success created.').'</strong></div>',
+							'id' => 'partial-language',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Language success created.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -195,16 +200,16 @@ class GlobaltagController extends Controller
 				}
 			}
 			Yii::app()->end();
-			
+
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 500;
 			
-			$this->pageTitle = Yii::t('phrase', 'Create Tag');
+			$this->pageTitle = Yii::t('phrase', 'Create New Language Pack');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_add',array(
+			$this->render('admin_add',array(
 				'model'=>$model,
 			));
 		}
@@ -222,21 +227,20 @@ class GlobaltagController extends Controller
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
-			
+		if(isset($_POST['OmmuLanguages'])) {
+			$model->attributes=$_POST['OmmuLanguages'];
+
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
 				echo $jsonError;
-
 			} else {
 				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
 					if($model->save()) {
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+							'id' => 'partial-language',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Language success updated.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -244,57 +248,21 @@ class GlobaltagController extends Controller
 				}
 			}
 			Yii::app()->end();
-			
+
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 500;
 			
-			$this->pageTitle = Yii::t('phrase', 'Update Tag');
+			$this->pageTitle = Yii::t('phrase', 'Update Language Pack').': '.$model->name;
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_edit',array(
+			$this->render('admin_edit',array(
 				'model'=>$model,
 			));
 		}
 	}
-
-	/**
-	 * Displays a particular model.
-	 * @param integer $id the ID of the model to be displayed
-	 */
-	public function actionRunAction() {
-		$id       = $_POST['trash_id'];
-		$criteria = null;
-		$actions  = $_GET['action'];
-
-		if(count($id) > 0) {
-			$criteria = new CDbCriteria;
-			$criteria->addInCondition('id', $id);
-
-			if($actions == 'publish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 1,
-				),$criteria);
-			} elseif($actions == 'unpublish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 0,
-				),$criteria);
-			} elseif($actions == 'trash') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 2,
-				),$criteria);
-			} elseif($actions == 'delete') {
-				OmmuTags::model()->deleteAll($criteria);
-			}
-		}
-
-		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-		if(!isset($_GET['ajax'])) {
-			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('manage'));
-		}
-	}
-
+	
 	/**
 	 * Deletes a particular model.
 	 * If deletion is successful, the browser will be redirected to the 'admin' page.
@@ -310,8 +278,8 @@ class GlobaltagController extends Controller
 				echo CJSON::encode(array(
 					'type' => 5,
 					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-ommu-tags',
-					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success deleted.').'</strong></div>',
+					'id' => 'partial-language',
+					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Language success deleted.').'</strong></div>',
 				));
 			}
 
@@ -320,10 +288,10 @@ class GlobaltagController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = Yii::t('phrase', 'Delete Tag');
+			$this->pageTitle = Yii::t('phrase', 'Delete Language');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_delete');
+			$this->render('admin_delete');
 		}
 	}
 
@@ -332,14 +300,14 @@ class GlobaltagController extends Controller
 	 * If deletion is successful, the browser will be redirected to the 'admin' page.
 	 * @param integer $id the ID of the model to be deleted
 	 */
-	public function actionPublish($id) 
+	public function actionActived($id) 
 	{
 		$model=$this->loadModel($id);
-		if($model->publish == 1) {
-			$title = Yii::t('phrase', 'Unpublish');
+		if($model->actived == 1) {
+			$title = Yii::t('phrase', 'Deactived');
 			$replace = 0;
 		} else {
-			$title = Yii::t('phrase', 'Publish');
+			$title = Yii::t('phrase', 'Actived');
 			$replace = 1;
 		}
 
@@ -347,14 +315,14 @@ class GlobaltagController extends Controller
 			// we only allow deletion via POST request
 			if(isset($id)) {
 				//change value active or publish
-				$model->publish = $replace;
+				$model->actived = $replace;
 
 				if($model->update()) {
 					echo CJSON::encode(array(
 						'type' => 5,
 						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-ommu-tags',
-						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+						'id' => 'partial-language',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Language success updated.').'</strong></div>',
 					));
 				}
 			}
@@ -367,7 +335,7 @@ class GlobaltagController extends Controller
 			$this->pageTitle = $title;
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_publish',array(
+			$this->render('admin_active',array(
 				'title'=>$title,
 				'model'=>$model,
 			));
@@ -381,7 +349,7 @@ class GlobaltagController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuTags::model()->findByPk($id);
+		$model = OmmuLanguages::model()->findByPk($id);
 		if($model===null)
 			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
@@ -393,7 +361,7 @@ class GlobaltagController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-tags-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-languages-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

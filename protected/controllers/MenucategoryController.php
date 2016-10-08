@@ -1,32 +1,35 @@
 <?php
 /**
-* ContentmenuController
-* Handle ContentmenuController
-* Copyright (c) 2013, Ommu Platform (ommu.co). All rights reserved.
-* version: 2.0.0
-* Reference start
-*
-* TOC :
-*	Index
-*	Manage
-*	Add
-*	Edit
-*	Delete
-*	Enabled
-*	Dialog
-*
-*	LoadModel
-*	performAjaxValidation
-*
-* @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
-* @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
-* @link http://company.ommu.co
-* @contact (+62)856-299-4114
-*
-*----------------------------------------------------------------------------------------------------------
-*/
+ * MenucategoryController
+ * @var $this MenucategoryController
+ * @var $model OmmuMenuCategory
+ * @var $form CActiveForm
+ * version: 1.1.0
+ * Reference start
+ *
+ * TOC :
+ *	Index
+ *	Manage
+ *	Add
+ *	Edit
+ *	View
+ *	RunAction
+ *	Delete
+ *	Publish
+ *
+ *	LoadModel
+ *	performAjaxValidation
+ *
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2016 Ommu Platform (ommu.co)
+ * @created date 15 January 2016, 16:57 WIB
+ * @link https://github.com/oMMu/Ommu-Core
+ * @contect (+62)856-299-4114
+ *
+ *----------------------------------------------------------------------------------------------------------
+ */
 
-class ContentmenuController extends Controller
+class MenucategoryController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -80,9 +83,10 @@ class ContentmenuController extends Controller
 				'actions'=>array(),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level)',
+				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','delete','enabled','dialog'),
+				'actions'=>array('manage','add','edit','view','runaction','delete','publish'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
@@ -109,10 +113,10 @@ class ContentmenuController extends Controller
 	 */
 	public function actionManage() 
 	{
-		$model=new OmmuContentMenu('search');
+		$model=new OmmuMenuCategory('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuContentMenu'])) {
-			$model->attributes=$_GET['OmmuContentMenu'];
+		if(isset($_GET['OmmuMenuCategory'])) {
+			$model->attributes=$_GET['OmmuMenuCategory'];
 		}
 
 		$columnTemp = array();
@@ -124,21 +128,14 @@ class ContentmenuController extends Controller
 			}
 		}
 		$columns = $model->getGridColumn($columnTemp);
-		
-		if(isset($_GET['module'])) {
-			$title = ': '.$_GET['module'];
-		} else {
-			$title = '';
-		}
 
-		$this->pageTitle = 'Manage Content Menu'.$title;
+		$this->pageTitle = Yii::t('phrase', 'Ommu Menu Categories Manage');
 		$this->pageDescription = '';
 		$this->pageMeta = '';
-		$this->render('/content_menu/admin_manage',array(
+		$this->render('/menu_category/admin_manage',array(
 			'model'=>$model,
 			'columns' => $columns,
 		));
-
 	}	
 	
 	/**
@@ -147,25 +144,26 @@ class ContentmenuController extends Controller
 	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuContentMenu;
+		$model=new OmmuMenuCategory;
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuContentMenu'])) {
-			$model->attributes=$_POST['OmmuContentMenu'];
-
+		if(isset($_POST['OmmuMenuCategory'])) {
+			$model->attributes=$_POST['OmmuMenuCategory'];
+			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
 				echo $jsonError;
+
 			} else {
 				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
 					if($model->save()) {
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-contentmenu',
-							'msg' => '<div class="errorSummary success"><strong>Content menu success created.</strong></div>',
+							'id' => 'partial-ommu-menu-category',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'OmmuMenuCategory success created.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -173,19 +171,18 @@ class ContentmenuController extends Controller
 				}
 			}
 			Yii::app()->end();
-
-		} else {
-			$this->dialogDetail = true;
-			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = 'Add Content Menu';
-			$this->pageDescription = '';
-			$this->pageMeta = '';
-			$this->render('/content_menu/admin_add',array(
-				'model'=>$model,
-			));
 		}
+		
+		$this->dialogDetail = true;
+		$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+		$this->dialogWidth = 600;
+
+		$this->pageTitle = Yii::t('phrase', 'Create Ommu Menu Categories');
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('/menu_category/admin_add',array(
+			'model'=>$model,
+		));
 	}
 
 	/**
@@ -200,20 +197,20 @@ class ContentmenuController extends Controller
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuContentMenu'])) {
-			$model->attributes=$_POST['OmmuContentMenu'];
-
+		if(isset($_POST['OmmuMenuCategory'])) {
+			$model->attributes=$_POST['OmmuMenuCategory'];
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
 				echo $jsonError;
+
 			} else {
 				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
 					if($model->save()) {
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-contentmenu',
-							'msg' => '<div class="errorSummary success"><strong>Content menu success updated.</strong></div>',
+							'id' => 'partial-ommu-menu-category',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'OmmuMenuCategory success updated.').'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -221,18 +218,73 @@ class ContentmenuController extends Controller
 				}
 			}
 			Yii::app()->end();
+		}
+		
+		$this->dialogDetail = true;
+		$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+		$this->dialogWidth = 600;
 
-		} else {
-			$this->dialogDetail = true;
-			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = 'Update Content Menu';
-			$this->pageDescription = '';
-			$this->pageMeta = '';
-			$this->render('/content_menu/admin_edit',array(
-				'model'=>$model,
-			));
+		$this->pageTitle = Yii::t('phrase', 'Update Ommu Menu Categories');
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('/menu_category/admin_edit',array(
+			'model'=>$model,
+		));
+	}
+	
+	/**
+	 * Displays a particular model.
+	 * @param integer $id the ID of the model to be displayed
+	 */
+	public function actionView($id) 
+	{
+		$model=$this->loadModel($id);
+		
+		$this->dialogDetail = true;
+		$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+		$this->dialogWidth = 600;
+
+		$this->pageTitle = Yii::t('phrase', 'View Ommu Menu Categories');
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('/menu_category/admin_view',array(
+			'model'=>$model,
+		));
+	}	
+
+	/**
+	 * Displays a particular model.
+	 * @param integer $id the ID of the model to be displayed
+	 */
+	public function actionRunAction() {
+		$id       = $_POST['trash_id'];
+		$criteria = null;
+		$actions  = $_GET['action'];
+
+		if(count($id) > 0) {
+			$criteria = new CDbCriteria;
+			$criteria->addInCondition('id', $id);
+
+			if($actions == 'publish') {
+				OmmuMenuCategory::model()->updateAll(array(
+					'publish' => 1,
+				),$criteria);
+			} elseif($actions == 'unpublish') {
+				OmmuMenuCategory::model()->updateAll(array(
+					'publish' => 0,
+				),$criteria);
+			} elseif($actions == 'trash') {
+				OmmuMenuCategory::model()->updateAll(array(
+					'publish' => 2,
+				),$criteria);
+			} elseif($actions == 'delete') {
+				OmmuMenuCategory::model()->deleteAll($criteria);
+			}
+		}
+
+		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+		if(!isset($_GET['ajax'])) {
+			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('manage'));
 		}
 	}
 
@@ -243,17 +295,19 @@ class ContentmenuController extends Controller
 	 */
 	public function actionDelete($id) 
 	{
+		$model=$this->loadModel($id);
+		
 		if(Yii::app()->request->isPostRequest) {
 			// we only allow deletion via POST request
 			if(isset($id)) {
-				$this->loadModel($id)->delete();
-
-				echo CJSON::encode(array(
-					'type' => 5,
-					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-contentmenu',
-					'msg' => '<div class="errorSummary success"><strong>Content menu success deleted.</strong></div>',
-				));
+				if($model->delete()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-menu-category',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'OmmuMenuCategory success deleted.').'</strong></div>',
+					));
+				}
 			}
 
 		} else {
@@ -261,10 +315,10 @@ class ContentmenuController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = 'Delete Content Menu';
+			$this->pageTitle = Yii::t('phrase', 'OmmuMenuCategory Delete.');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/content_menu/admin_delete');
+			$this->render('/menu_category/admin_delete');
 		}
 	}
 
@@ -273,14 +327,15 @@ class ContentmenuController extends Controller
 	 * If deletion is successful, the browser will be redirected to the 'admin' page.
 	 * @param integer $id the ID of the model to be deleted
 	 */
-	public function actionEnabled($id) 
+	public function actionPublish($id) 
 	{
 		$model=$this->loadModel($id);
-		if($model->enabled == 1) {
-			$title = 'Disabled';
+		
+		if($model->publish == 1) {
+			$title = Yii::t('phrase', 'Unpublish');
 			$replace = 0;
 		} else {
-			$title = 'Enabled';
+			$title = Yii::t('phrase', 'Publish');
 			$replace = 1;
 		}
 
@@ -288,14 +343,14 @@ class ContentmenuController extends Controller
 			// we only allow deletion via POST request
 			if(isset($id)) {
 				//change value active or publish
-				$model->enabled = $replace;
+				$model->publish = $replace;
 
 				if($model->update()) {
 					echo CJSON::encode(array(
 						'type' => 5,
 						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-contentmenu',
-						'msg' => '<div class="errorSummary success"><strong>Content menu success updated.</strong></div>',
+						'id' => 'partial-ommu-menu-category',
+						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'OmmuMenuCategory success published.').'</strong></div>',
 					));
 				}
 			}
@@ -308,54 +363,7 @@ class ContentmenuController extends Controller
 			$this->pageTitle = $title;
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/content_menu/admin_enable',array(
-				'title'=>$title,
-				'model'=>$model,
-			));
-		}
-	}
-
-	/**
-	 * Deletes a particular model.
-	 * If deletion is successful, the browser will be redirected to the 'admin' page.
-	 * @param integer $id the ID of the model to be deleted
-	 */
-	public function actionDialog($id) 
-	{
-		$model=$this->loadModel($id);
-		if($model->dialog == 1) {
-			$title = 'Disable Dialog';
-			$replace = 0;
-		} else {
-			$title = 'Enabled Dialog';
-			$replace = 1;
-		}
-
-		if(Yii::app()->request->isPostRequest) {
-			// we only allow deletion via POST request
-			if(isset($id)) {
-				//change value active or publish
-				$model->dialog = $replace;
-
-				if($model->update()) {
-					echo CJSON::encode(array(
-						'type' => 5,
-						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-contentmenu',
-						'msg' => '<div class="errorSummary success"><strong>Content menu success updated.</strong></div>',
-					));
-				}
-			}
-
-		} else {
-			$this->dialogDetail = true;
-			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 350;
-
-			$this->pageTitle = $title;
-			$this->pageDescription = '';
-			$this->pageMeta = '';
-			$this->render('/content_menu/admin_dialog',array(
+			$this->render('/menu_category/admin_publish',array(
 				'title'=>$title,
 				'model'=>$model,
 			));
@@ -369,9 +377,9 @@ class ContentmenuController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuContentMenu::model()->findByPk($id);
+		$model = OmmuMenuCategory::model()->findByPk($id);
 		if($model===null)
-			throw new CHttpException(404, 'The requested page does not exist.');
+			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
 	}
 
@@ -381,7 +389,7 @@ class ContentmenuController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-content-menu-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-menu-category-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

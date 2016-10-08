@@ -1,19 +1,18 @@
 <?php
 /**
- * GlobaltagController
- * Handle GlobaltagController
+ * TranslateController
+ * @var $this TranslateController
+ * @var $model OmmuSystemPhrase
+ * @var $form CActiveForm
  * version: 1.1.0
  * Reference start
  *
  * TOC :
  *	Index
- *	Suggest
  *	Manage
  *	Add
  *	Edit
- *	RunAction
  *	Delete
- *	Publish
  *
  *	LoadModel
  *	performAjaxValidation
@@ -26,7 +25,7 @@
  *----------------------------------------------------------------------------------------------------------
  */
 
-class GlobaltagController extends Controller
+class TranslateController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -46,7 +45,7 @@ class GlobaltagController extends Controller
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
 			} else {
-				throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
+				$this->redirect(Yii::app()->createUrl('site/login'));
 			}
 		} else {
 			$this->redirect(Yii::app()->createUrl('site/login'));
@@ -83,7 +82,7 @@ class GlobaltagController extends Controller
 				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('manage','add','edit','runaction','delete','publish'),
+				'actions'=>array('manage','add','edit','delete'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && in_array(Yii::app()->user->level, array(1,2))',
 			),
@@ -112,20 +111,19 @@ class GlobaltagController extends Controller
 	 */
 	public function actionSuggest($limit=10) {
 		if(isset($_GET['term'])) {
+			if($language == null || $language != null && $language == '')
+				$body = 'en_us';
 			$criteria = new CDbCriteria;
-			$criteria->condition = 'publish = 1 AND body LIKE :body';
-			$criteria->select	= "tag_id, body";
-			$criteria->limit = $limit;
-			$criteria->order = "tag_id ASC";
+			$criteria->condition = $body.' LIKE :body';
 			$criteria->params = array(':body' => '%' . strtolower($_GET['term']) . '%');
-			$model = OmmuTags::model()->findAll($criteria);
+			$criteria->limit = $limit;
+			$criteria->order = "phrase_id ASC";
+			$model = OmmuSystemPhrase::model()->findAll($criteria);
 
 			if($model) {
 				foreach($model as $items) {
-					$result[] = array('id' => $items->tag_id, 'value' => $items->body);
+					$result[] = array('id' => $items->phrase_id, 'value' => $items->$body);
 				}
-			} else {
-				$result[] = array('id' => 0, 'value' => $_GET['term']);
 			}
 		}
 		echo CJSON::encode($result);
@@ -137,10 +135,10 @@ class GlobaltagController extends Controller
 	 */
 	public function actionManage() 
 	{
-		$model=new OmmuTags('search');
+		$model=new OmmuSystemPhrase('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuTags'])) {
-			$model->attributes=$_GET['OmmuTags'];
+		if(isset($_GET['OmmuSystemPhrase'])) {
+			$model->attributes=$_GET['OmmuSystemPhrase'];
 		}
 
 		$columnTemp = array();
@@ -153,10 +151,10 @@ class GlobaltagController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = Yii::t('phrase', 'Tags Manage');
+		$this->pageTitle = Yii::t('phrase', 'Front Phrases');
 		$this->pageDescription = '';
 		$this->pageMeta = '';
-		$this->render('/global_tag/admin_manage',array(
+		$this->render('admin_manage',array(
 			'model'=>$model,
 			'columns' => $columns,
 		));
@@ -168,13 +166,14 @@ class GlobaltagController extends Controller
 	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuTags;
+		$model=new OmmuSystemPhrase;
+		$language = OmmuLanguages::model()->findAll();
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuSystemPhrase'])) {
+			$model->attributes=$_POST['OmmuSystemPhrase'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -182,13 +181,16 @@ class GlobaltagController extends Controller
 
 			} else {
 				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
-					if($model->save()) {
-						echo CJSON::encode(array(
-							'type' => 5,
-							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success created.').'</strong></div>',
-						));
+					if($model->validate()) {
+						if($model->save()) {
+							echo CJSON::encode(array(
+								'type' => 5,
+								'get' => Yii::app()->controller->createUrl('manage'),
+								'id' => 'partial-ommu-system-phrase',
+								'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', '{phrase} Front Phrase success created.', array('{phrase}'=>$model->phrase_id)).'</strong></div>',
+								
+							));
+						}
 					} else {
 						print_r($model->getErrors());
 					}
@@ -199,13 +201,14 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
+			$this->dialogWidth = 600;
 			
-			$this->pageTitle = Yii::t('phrase', 'Create Tag');
+			$this->pageTitle = Yii::t('phrase', 'Add Front Phrase');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_add',array(
+			$this->render('admin_add',array(
 				'model'=>$model,
+				'language'=>$language,
 			));
 		}
 	}
@@ -218,12 +221,13 @@ class GlobaltagController extends Controller
 	public function actionEdit($id) 
 	{
 		$model=$this->loadModel($id);
+		$language = OmmuLanguages::model()->findAll();
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuSystemPhrase'])) {
+			$model->attributes=$_POST['OmmuSystemPhrase'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -235,8 +239,8 @@ class GlobaltagController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+							'id' => 'partial-ommu-system-phrase',
+							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', '{phrase} Front Phrase success updated.', array('{phrase}'=>$model->phrase_id)).'</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -248,50 +252,15 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
+			$this->dialogWidth = 600;
 			
-			$this->pageTitle = Yii::t('phrase', 'Update Tag');
+			$this->pageTitle = Yii::t('phrase', 'Update Front Phrase');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_edit',array(
+			$this->render('admin_edit',array(
 				'model'=>$model,
+				'language'=>$language,
 			));
-		}
-	}
-
-	/**
-	 * Displays a particular model.
-	 * @param integer $id the ID of the model to be displayed
-	 */
-	public function actionRunAction() {
-		$id       = $_POST['trash_id'];
-		$criteria = null;
-		$actions  = $_GET['action'];
-
-		if(count($id) > 0) {
-			$criteria = new CDbCriteria;
-			$criteria->addInCondition('id', $id);
-
-			if($actions == 'publish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 1,
-				),$criteria);
-			} elseif($actions == 'unpublish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 0,
-				),$criteria);
-			} elseif($actions == 'trash') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 2,
-				),$criteria);
-			} elseif($actions == 'delete') {
-				OmmuTags::model()->deleteAll($criteria);
-			}
-		}
-
-		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-		if(!isset($_GET['ajax'])) {
-			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('manage'));
 		}
 	}
 
@@ -310,8 +279,8 @@ class GlobaltagController extends Controller
 				echo CJSON::encode(array(
 					'type' => 5,
 					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-ommu-tags',
-					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success deleted.').'</strong></div>',
+					'id' => 'partial-ommu-system-phrase',
+					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Front Phrase success deleted.').'</strong></div>',
 				));
 			}
 
@@ -320,57 +289,10 @@ class GlobaltagController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = Yii::t('phrase', 'Delete Tag');
+			$this->pageTitle = Yii::t('phrase', 'Delete Front Phrase');
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_delete');
-		}
-	}
-
-	/**
-	 * Deletes a particular model.
-	 * If deletion is successful, the browser will be redirected to the 'admin' page.
-	 * @param integer $id the ID of the model to be deleted
-	 */
-	public function actionPublish($id) 
-	{
-		$model=$this->loadModel($id);
-		if($model->publish == 1) {
-			$title = Yii::t('phrase', 'Unpublish');
-			$replace = 0;
-		} else {
-			$title = Yii::t('phrase', 'Publish');
-			$replace = 1;
-		}
-
-		if(Yii::app()->request->isPostRequest) {
-			// we only allow deletion via POST request
-			if(isset($id)) {
-				//change value active or publish
-				$model->publish = $replace;
-
-				if($model->update()) {
-					echo CJSON::encode(array(
-						'type' => 5,
-						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-ommu-tags',
-						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
-					));
-				}
-			}
-
-		} else {
-			$this->dialogDetail = true;
-			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 350;
-
-			$this->pageTitle = $title;
-			$this->pageDescription = '';
-			$this->pageMeta = '';
-			$this->render('/global_tag/admin_publish',array(
-				'title'=>$title,
-				'model'=>$model,
-			));
+			$this->render('admin_delete');
 		}
 	}
 
@@ -381,7 +303,7 @@ class GlobaltagController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuTags::model()->findByPk($id);
+		$model = OmmuSystemPhrase::model()->findByPk($id);
 		if($model===null)
 			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
@@ -393,7 +315,7 @@ class GlobaltagController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-tags-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-system-phrase-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

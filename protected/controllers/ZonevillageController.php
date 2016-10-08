@@ -1,7 +1,9 @@
 <?php
 /**
- * GlobaltagController
- * Handle GlobaltagController
+ * ZonevillageController
+ * @var $this ZonevillageController
+ * @var $model OmmuZoneVillage
+ * @var $form CActiveForm
  * version: 1.1.0
  * Reference start
  *
@@ -19,14 +21,14 @@
  *	performAjaxValidation
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
- * @contact (+62)856-299-4114
+ * @contect (+62)856-299-4114
  *
  *----------------------------------------------------------------------------------------------------------
  */
 
-class GlobaltagController extends Controller
+class ZonevillageController extends Controller
 {
 	/**
 	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
@@ -41,12 +43,12 @@ class GlobaltagController extends Controller
 	public function init() 
 	{
 		if(!Yii::app()->user->isGuest) {
-			if(in_array(Yii::app()->user->level, array(1,2))) {
+			if(Yii::app()->user->level == 1) {
 				$arrThemes = Utility::getCurrentTemplate('admin');
 				Yii::app()->theme = $arrThemes['folder'];
 				$this->layout = $arrThemes['layout'];
 			} else {
-				throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
+				$this->redirect(Yii::app()->createUrl('site/login'));
 			}
 		} else {
 			$this->redirect(Yii::app()->createUrl('site/login'));
@@ -73,11 +75,11 @@ class GlobaltagController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index'),
+				'actions'=>array('index','suggest'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('suggest'),
+				'actions'=>array(),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level)',
 				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
@@ -85,7 +87,7 @@ class GlobaltagController extends Controller
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
 				'actions'=>array('manage','add','edit','runaction','delete','publish'),
 				'users'=>array('@'),
-				'expression'=>'isset(Yii::app()->user->level) && in_array(Yii::app()->user->level, array(1,2))',
+				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
 				'actions'=>array(),
@@ -104,32 +106,38 @@ class GlobaltagController extends Controller
 	{
 		$this->redirect(array('manage'));
 	}
-	
-	/**
-	 * Updates a particular model.
-	 * If update is successful, the browser will be redirected to the 'view' page.
-	 * @param integer $id the ID of the model to be updated
-	 */
-	public function actionSuggest($limit=10) {
-		if(isset($_GET['term'])) {
-			$criteria = new CDbCriteria;
-			$criteria->condition = 'publish = 1 AND body LIKE :body';
-			$criteria->select	= "tag_id, body";
-			$criteria->limit = $limit;
-			$criteria->order = "tag_id ASC";
-			$criteria->params = array(':body' => '%' . strtolower($_GET['term']) . '%');
-			$model = OmmuTags::model()->findAll($criteria);
 
-			if($model) {
-				foreach($model as $items) {
-					$result[] = array('id' => $items->tag_id, 'value' => $items->body);
+	/**
+	 * Lists all models.
+	 */
+	public function actionSuggest($id=null) 
+	{
+		if($id == null) {
+			if(isset($_GET['term'])) {
+				$criteria = new CDbCriteria;
+				$criteria->condition = 'village_name LIKE :village';
+				$criteria->select	= "village_id, village_name";
+				$criteria->order = "village_id ASC";
+				$criteria->params = array(':village' => '%' . strtolower($_GET['term']) . '%');
+				$model = OmmuZoneVillage::model()->findAll($criteria);
+
+				if($model) {
+					foreach($model as $items) {
+						$result[] = array('id' => $items->village_id, 'value' => $items->village_name);
+					}
 				}
-			} else {
-				$result[] = array('id' => 0, 'value' => $_GET['term']);
 			}
+			echo CJSON::encode($result);
+			Yii::app()->end();
+			
+		} else {
+			$model = OmmuZoneVillage::getVillage($id);
+			$message['data'] = '<option value="">'.Yii::t('phrase', 'Select one').'</option>';
+			foreach($model as $key => $val) {
+				$message['data'] .= '<option value="'.$key.'">'.$val.'</option>';
+			}
+			echo CJSON::encode($message);			
 		}
-		echo CJSON::encode($result);
-		Yii::app()->end();
 	}
 
 	/**
@@ -137,10 +145,10 @@ class GlobaltagController extends Controller
 	 */
 	public function actionManage() 
 	{
-		$model=new OmmuTags('search');
+		$model=new OmmuZoneVillage('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['OmmuTags'])) {
-			$model->attributes=$_GET['OmmuTags'];
+		if(isset($_GET['OmmuZoneVillage'])) {
+			$model->attributes=$_GET['OmmuZoneVillage'];
 		}
 
 		$columnTemp = array();
@@ -153,10 +161,10 @@ class GlobaltagController extends Controller
 		}
 		$columns = $model->getGridColumn($columnTemp);
 
-		$this->pageTitle = Yii::t('phrase', 'Tags Manage');
+		$this->pageTitle = 'Ommu Zone Villages Manage';
 		$this->pageDescription = '';
 		$this->pageMeta = '';
-		$this->render('/global_tag/admin_manage',array(
+		$this->render('/zone_village/admin_manage',array(
 			'model'=>$model,
 			'columns' => $columns,
 		));
@@ -168,13 +176,13 @@ class GlobaltagController extends Controller
 	 */
 	public function actionAdd() 
 	{
-		$model=new OmmuTags;
+		$model=new OmmuZoneVillage;
 
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuZoneVillage'])) {
+			$model->attributes=$_POST['OmmuZoneVillage'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -186,8 +194,8 @@ class GlobaltagController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success created.').'</strong></div>',
+							'id' => 'partial-ommu-zone-village',
+							'msg' => '<div class="errorSummary success"><strong>OmmuZoneVillage success created.</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -199,14 +207,14 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = Yii::t('phrase', 'Create Tag');
+			$this->dialogWidth = 600;
+
+			$this->pageTitle = 'Create Ommu Zone Villages';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_add',array(
+			$this->render('/zone_village/admin_add',array(
 				'model'=>$model,
-			));
+			));			
 		}
 	}
 
@@ -222,8 +230,8 @@ class GlobaltagController extends Controller
 		// Uncomment the following line if AJAX validation is needed
 		$this->performAjaxValidation($model);
 
-		if(isset($_POST['OmmuTags'])) {
-			$model->attributes=$_POST['OmmuTags'];
+		if(isset($_POST['OmmuZoneVillage'])) {
+			$model->attributes=$_POST['OmmuZoneVillage'];
 			
 			$jsonError = CActiveForm::validate($model);
 			if(strlen($jsonError) > 2) {
@@ -235,8 +243,8 @@ class GlobaltagController extends Controller
 						echo CJSON::encode(array(
 							'type' => 5,
 							'get' => Yii::app()->controller->createUrl('manage'),
-							'id' => 'partial-ommu-tags',
-							'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+							'id' => 'partial-ommu-zone-village',
+							'msg' => '<div class="errorSummary success"><strong>OmmuZoneVillage success updated.</strong></div>',
 						));
 					} else {
 						print_r($model->getErrors());
@@ -248,14 +256,14 @@ class GlobaltagController extends Controller
 		} else {
 			$this->dialogDetail = true;
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
-			$this->dialogWidth = 500;
-			
-			$this->pageTitle = Yii::t('phrase', 'Update Tag');
+			$this->dialogWidth = 600;
+
+			$this->pageTitle = 'Update Ommu Zone Villages';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_edit',array(
+			$this->render('/zone_village/admin_edit',array(
 				'model'=>$model,
-			));
+			));			
 		}
 	}
 
@@ -273,19 +281,19 @@ class GlobaltagController extends Controller
 			$criteria->addInCondition('id', $id);
 
 			if($actions == 'publish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 1,
+				OmmuZoneVillage::model()->updateAll(array(
+					'publish' => 1,
 				),$criteria);
 			} elseif($actions == 'unpublish') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 0,
+				OmmuZoneVillage::model()->updateAll(array(
+					'publish' => 0,
 				),$criteria);
 			} elseif($actions == 'trash') {
-				OmmuTags::model()->updateAll(array(
-					'published' => 2,
+				OmmuZoneVillage::model()->updateAll(array(
+					'publish' => 2,
 				),$criteria);
 			} elseif($actions == 'delete') {
-				OmmuTags::model()->deleteAll($criteria);
+				OmmuZoneVillage::model()->deleteAll($criteria);
 			}
 		}
 
@@ -302,17 +310,19 @@ class GlobaltagController extends Controller
 	 */
 	public function actionDelete($id) 
 	{
+		$model=$this->loadModel($id);
+		
 		if(Yii::app()->request->isPostRequest) {
 			// we only allow deletion via POST request
 			if(isset($id)) {
-				$this->loadModel($id)->delete();
-
-				echo CJSON::encode(array(
-					'type' => 5,
-					'get' => Yii::app()->controller->createUrl('manage'),
-					'id' => 'partial-ommu-tags',
-					'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success deleted.').'</strong></div>',
-				));
+				if($model->delete()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-zone-village',
+						'msg' => '<div class="errorSummary success"><strong>OmmuZoneVillage success deleted.</strong></div>',
+					));
+				}
 			}
 
 		} else {
@@ -320,10 +330,10 @@ class GlobaltagController extends Controller
 			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
 			$this->dialogWidth = 350;
 
-			$this->pageTitle = Yii::t('phrase', 'Delete Tag');
+			$this->pageTitle = 'OmmuZoneVillage Delete.';
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_delete');
+			$this->render('/zone_village/admin_delete');
 		}
 	}
 
@@ -335,6 +345,7 @@ class GlobaltagController extends Controller
 	public function actionPublish($id) 
 	{
 		$model=$this->loadModel($id);
+		
 		if($model->publish == 1) {
 			$title = Yii::t('phrase', 'Unpublish');
 			$replace = 0;
@@ -353,8 +364,8 @@ class GlobaltagController extends Controller
 					echo CJSON::encode(array(
 						'type' => 5,
 						'get' => Yii::app()->controller->createUrl('manage'),
-						'id' => 'partial-ommu-tags',
-						'msg' => '<div class="errorSummary success"><strong>'.Yii::t('phrase', 'Tag success updated.').'</strong></div>',
+						'id' => 'partial-ommu-zone-village',
+						'msg' => '<div class="errorSummary success"><strong>OmmuZoneVillage success published.</strong></div>',
 					));
 				}
 			}
@@ -367,7 +378,7 @@ class GlobaltagController extends Controller
 			$this->pageTitle = $title;
 			$this->pageDescription = '';
 			$this->pageMeta = '';
-			$this->render('/global_tag/admin_publish',array(
+			$this->render('/zone_village/admin_publish',array(
 				'title'=>$title,
 				'model'=>$model,
 			));
@@ -381,7 +392,7 @@ class GlobaltagController extends Controller
 	 */
 	public function loadModel($id) 
 	{
-		$model = OmmuTags::model()->findByPk($id);
+		$model = OmmuZoneVillage::model()->findByPk($id);
 		if($model===null)
 			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
@@ -393,7 +404,7 @@ class GlobaltagController extends Controller
 	 */
 	protected function performAjaxValidation($model) 
 	{
-		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-tags-form') {
+		if(isset($_POST['ajax']) && $_POST['ajax']==='ommu-zone-village-form') {
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}

@@ -1,24 +1,30 @@
 <?php
 /**
-* ZonecountryController
-* Handle ZonecountryController
-* Copyright (c) 2013, Ommu Platform (ommu.co). All rights reserved.
-* version: 2.0.0
-* Reference start
-*
-* TOC :
-*	Index
-*
-*	LoadModel
-*	performAjaxValidation
-*
-* @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
-* @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
-* @link http://company.ommu.co
-* @contact (+62)856-299-4114
-*
-*----------------------------------------------------------------------------------------------------------
-*/
+ * ZonecountryController
+ * @var $this ZonecountryController
+ * @var $model OmmuZoneCountry
+ * @var $form CActiveForm
+ * version: 1.1.0
+ * Reference start
+ *
+ * TOC :
+ *	Index
+ *	Suggest
+ *	Manage
+ *	Add
+ *	Edit
+ *	Delete
+ *
+ *	LoadModel
+ *	performAjaxValidation
+ *
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
+ * @contect (+62)856-299-4114
+ *
+ *----------------------------------------------------------------------------------------------------------
+ */
 
 class ZonecountryController extends Controller
 {
@@ -67,7 +73,7 @@ class ZonecountryController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index'),
+				'actions'=>array('index','suggest'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
@@ -77,7 +83,7 @@ class ZonecountryController extends Controller
 				//'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level != 1)',
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array(),
+				'actions'=>array('manage','add','edit','delete'),
 				'users'=>array('@'),
 				'expression'=>'isset(Yii::app()->user->level) && (Yii::app()->user->level == 1)',
 			),
@@ -96,7 +102,201 @@ class ZonecountryController extends Controller
 	 */
 	public function actionIndex() 
 	{
-		$this->redirect(Yii::app()->createUrl('site/login'));
+		$this->redirect(array('manage'));
+	}
+
+	/**
+	 * Lists all models.
+	 */
+	public function actionSuggest($id=null) 
+	{
+		if($id == null) {
+			if(isset($_GET['term'])) {
+				$criteria = new CDbCriteria;
+				$criteria->condition = 'country LIKE :country';
+				$criteria->select	= "country_id, country";
+				$criteria->order = "country_id ASC";
+				$criteria->params = array(':country' => '%' . strtolower($_GET['term']) . '%');
+				$model = OmmuZoneCountry::model()->findAll($criteria);
+
+				if($model) {
+					foreach($model as $items) {
+						$result[] = array('id' => $items->country_id, 'value' => $items->country);
+					}
+				}
+			}
+			echo CJSON::encode($result);
+			Yii::app()->end();
+			
+		} else {
+			$model = OmmuZoneCountry::getCountry();
+			$message['data'] = '<option value="">'.Yii::t('phrase', 'Select one').'</option>';
+			foreach($model as $key => $val) {
+				$message['data'] .= '<option value="'.$key.'">'.$val.'</option>';
+			}
+			echo CJSON::encode($message);			
+		}
+	}
+
+	/**
+	 * Manages all models.
+	 */
+	public function actionManage() 
+	{
+		$model=new OmmuZoneCountry('search');
+		$model->unsetAttributes();  // clear any default values
+		if(isset($_GET['OmmuZoneCountry'])) {
+			$model->attributes=$_GET['OmmuZoneCountry'];
+		}
+
+		$columnTemp = array();
+		if(isset($_GET['GridColumn'])) {
+			foreach($_GET['GridColumn'] as $key => $val) {
+				if($_GET['GridColumn'][$key] == 1) {
+					$columnTemp[] = $key;
+				}
+			}
+		}
+		$columns = $model->getGridColumn($columnTemp);
+
+		$this->pageTitle = 'Ommu Zone Countries Manage';
+		$this->pageDescription = '';
+		$this->pageMeta = '';
+		$this->render('/zone_country/admin_manage',array(
+			'model'=>$model,
+			'columns' => $columns,
+		));
+	}	
+	
+	/**
+	 * Creates a new model.
+	 * If creation is successful, the browser will be redirected to the 'view' page.
+	 */
+	public function actionAdd() 
+	{
+		$model=new OmmuZoneCountry;
+
+		// Uncomment the following line if AJAX validation is needed
+		$this->performAjaxValidation($model);
+
+		if(isset($_POST['OmmuZoneCountry'])) {
+			$model->attributes=$_POST['OmmuZoneCountry'];
+			
+			$jsonError = CActiveForm::validate($model);
+			if(strlen($jsonError) > 2) {
+				echo $jsonError;
+
+			} else {
+				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
+					if($model->save()) {
+						echo CJSON::encode(array(
+							'type' => 5,
+							'get' => Yii::app()->controller->createUrl('manage'),
+							'id' => 'partial-ommu-zone-country',
+							'msg' => '<div class="errorSummary success"><strong>OmmuZoneCountry success created.</strong></div>',
+						));
+					} else {
+						print_r($model->getErrors());
+					}
+				}
+			}
+			Yii::app()->end();
+			
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 600;
+			
+			$this->pageTitle = 'Create Ommu Zone Countries';
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('/zone_country/admin_add',array(
+				'model'=>$model,
+			));			
+		}
+	}
+
+	/**
+	 * Updates a particular model.
+	 * If update is successful, the browser will be redirected to the 'view' page.
+	 * @param integer $id the ID of the model to be updated
+	 */
+	public function actionEdit($id) 
+	{
+		$model=$this->loadModel($id);
+
+		// Uncomment the following line if AJAX validation is needed
+		$this->performAjaxValidation($model);
+
+		if(isset($_POST['OmmuZoneCountry'])) {
+			$model->attributes=$_POST['OmmuZoneCountry'];
+			
+			$jsonError = CActiveForm::validate($model);
+			if(strlen($jsonError) > 2) {
+				echo $jsonError;
+
+			} else {
+				if(isset($_GET['enablesave']) && $_GET['enablesave'] == 1) {
+					if($model->save()) {
+						echo CJSON::encode(array(
+							'type' => 5,
+							'get' => Yii::app()->controller->createUrl('manage'),
+							'id' => 'partial-ommu-zone-country',
+							'msg' => '<div class="errorSummary success"><strong>OmmuZoneCountry success updated.</strong></div>',
+						));
+					} else {
+						print_r($model->getErrors());
+					}
+				}
+			}
+			Yii::app()->end();
+			
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 600;
+			
+			$this->pageTitle = 'Update Ommu Zone Countries';
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('/zone_country/admin_edit',array(
+				'model'=>$model,
+			));
+		}
+	}
+
+	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionDelete($id) 
+	{
+		$model=$this->loadModel($id);
+		
+		if(Yii::app()->request->isPostRequest) {
+			// we only allow deletion via POST request
+			if(isset($id)) {
+				if($model->delete()) {
+					echo CJSON::encode(array(
+						'type' => 5,
+						'get' => Yii::app()->controller->createUrl('manage'),
+						'id' => 'partial-ommu-zone-country',
+						'msg' => '<div class="errorSummary success"><strong>OmmuZoneCountry success deleted.</strong></div>',
+					));
+				}
+			}
+
+		} else {
+			$this->dialogDetail = true;
+			$this->dialogGroundUrl = Yii::app()->controller->createUrl('manage');
+			$this->dialogWidth = 350;
+
+			$this->pageTitle = 'OmmuZoneCountry Delete.';
+			$this->pageDescription = '';
+			$this->pageMeta = '';
+			$this->render('/zone_country/admin_delete');
+		}
 	}
 
 	/**
@@ -108,7 +308,7 @@ class ZonecountryController extends Controller
 	{
 		$model = OmmuZoneCountry::model()->findByPk($id);
 		if($model===null)
-			throw new CHttpException(404, 'The requested page does not exist.');
+			throw new CHttpException(404, Yii::t('phrase', 'The requested page does not exist.'));
 		return $model;
 	}
 
