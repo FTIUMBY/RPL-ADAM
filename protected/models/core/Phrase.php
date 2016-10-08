@@ -18,7 +18,23 @@ class Phrase
 		return $this->encodeLabel;
 	} */
 	
-	public static function trans($phrase, $other=null) {
+	public static function trans($id, $type, $other=null) {
+		if($type == 1) {
+			$model = OmmuPluginPhrase::model()->findByPk($id);
+		} else if($type == 2) {
+			$model = OmmuSystemPhrase::model()->findByPk($id);
+		}
+		
+		if(isset(Yii::app()->session['language'])) {
+			$language = Yii::app()->session['language'];
+			$language = 'en_us';
+			if($model->$language == '') {
+				$language = 'en_us';
+			}
+		} else {
+			$language = 'en_us';
+		}
+		
 		if(!empty($other)) {
 			$replace = array();
 			$search = array();
@@ -33,10 +49,10 @@ class Phrase
 					$replace[] = $url;
 				$search[] = '$'.$i.'';
 			}
-			$phrase = str_replace($search, $replace, $phrase);
+			$phrase = str_replace($search, $replace, $model->$language);
 			
 		} else
-			$phrase = $phrase;
+			$phrase = $model->$language;
 		
 		return $phrase;
 	}

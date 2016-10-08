@@ -1,6 +1,6 @@
 <?php
 /**
- * OmmuTimezone
+ * OmmuPluginPhrase
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
@@ -19,22 +19,25 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_timezone".
+ * This is the model class for table "ommu_core_plugin_phrase".
  *
- * The followings are the available columns in table 'ommu_core_timezone':
- * @property integer $timezone_id
- * @property integer $defaults
- * @property string $timezone
- * @property string $title
+ * The followings are the available columns in table 'ommu_core_plugin_phrase':
+ * @property string $phrase_id
+ * @property integer $plugin_id
+ * @property string $location
+ * @property string $en_us
+ *
+ * The followings are the available model relations:
+ * @property OmmuCorePlugins $plugin
  */
-class OmmuTimezone extends CActiveRecord
+class OmmuPluginPhrase extends CActiveRecord
 {
 	public $defaultColumns = array();
 
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @param string $className active record class name.
-	 * @return OmmuTimezone the static model class
+	 * @return OmmuPluginPhrase the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -46,7 +49,7 @@ class OmmuTimezone extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_timezone';
+		return 'ommu_core_plugin_phrase';
 	}
 
 	/**
@@ -57,13 +60,15 @@ class OmmuTimezone extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('timezone, title', 'required'),
-			array('defaults', 'numerical', 'integerOnly'=>true),
-			array('timezone', 'length', 'max'=>32),
-			array('title', 'length', 'max'=>64),
+			array('en_us', 'required'),
+			array('plugin_id', 'numerical', 'integerOnly'=>true),
+			array('phrase_id', 'length', 'max'=>11),
+			array('location', 'length', 'max'=>32),
+			array('plugin_id, location, 
+				id', 'safe'),
 			// The following rule is used by search().
 			// Please remove those attributes that should not be searched.
-			array('timezone_id, defaults, timezone, title', 'safe', 'on'=>'search'),
+			array('phrase_id, plugin_id, location, en_us', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -75,6 +80,7 @@ class OmmuTimezone extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'plugin' => array(self::BELONGS_TO, 'OmmuPlugins', 'plugin_id'),
 		);
 	}
 
@@ -84,10 +90,10 @@ class OmmuTimezone extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'timezone_id' => Yii::t('attribute', 'Timezone'),
-			'defaults' => Yii::t('attribute', 'Defaults'),
-			'timezone' => Yii::t('attribute', 'Timezone'),
-			'title' => Yii::t('attribute', 'Title'),
+			'phrase_id' => Yii::t('phrase', 'Phrase'),
+			'plugin_id' => Yii::t('phrase', 'Plugins'),
+			'location' => Yii::t('phrase', 'Location'),
+			'en_us' => 'En',
 		);
 	}
 	
@@ -102,13 +108,17 @@ class OmmuTimezone extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.timezone_id',$this->timezone_id);
-		$criteria->compare('t.defaults',$this->defaults);
-		$criteria->compare('t.timezone',strtolower($this->timezone),true);
-		$criteria->compare('t.title',strtolower($this->title),true);
+		$criteria->compare('t.phrase_id',$this->phrase_id);
+		if(isset($_GET['module'])) {
+			$criteria->compare('t.plugin_id',$_GET['module']);
+		} else {
+			$criteria->compare('t.plugin_id',$this->plugin_id);
+		}
+		$criteria->compare('t.location',strtolower($this->location),true);
+		$criteria->compare('t.en_us',strtolower($this->en_us),true);
 
-		if(!isset($_GET['OmmuTimezone_sort']))
-			$criteria->order = 't.timezone_id DESC';
+		if(!isset($_GET['OmmuPluginPhrase_sort']))
+			$criteria->order = 't.phrase_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -117,6 +127,7 @@ class OmmuTimezone extends CActiveRecord
 			),
 		));
 	}
+
 
 	/**
 	 * Get column for CGrid View
@@ -135,10 +146,10 @@ class OmmuTimezone extends CActiveRecord
 				$this->defaultColumns[] = $val;
 			}
 		}else {
-			//$this->defaultColumns[] = 'timezone_id';
-			$this->defaultColumns[] = 'defaults';
-			$this->defaultColumns[] = 'timezone';
-			$this->defaultColumns[] = 'title';
+			//$this->defaultColumns[] = 'phrase_id';
+			$this->defaultColumns[] = 'plugin_id';
+			$this->defaultColumns[] = 'location';
+			$this->defaultColumns[] = 'en_us';
 		}
 
 		return $this->defaultColumns;
@@ -149,53 +160,38 @@ class OmmuTimezone extends CActiveRecord
 	 */
 	protected function afterConstruct() {
 		if(count($this->defaultColumns) == 0) {
-			$this->defaultColumns[] = 'timezone_id';
-			$this->defaultColumns[] = 'defaults';
-			$this->defaultColumns[] = 'timezone';
-			$this->defaultColumns[] = 'title';
+			$this->defaultColumns[] = array(
+				'header' => 'ID',
+				'name' => 'phrase_id',
+				'value' => '$data->phrase_id',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'plugin_id',
+				'value' => '$data->plugin->name',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>OmmuPlugins::getPlugin(0, 'id'),
+				'type' => 'raw',
+			);
+			$this->defaultColumns[] = 'en_us';
+			$this->defaultColumns[] = 'id';
+			$this->defaultColumns[] = 'location';
 		}
 		parent::afterConstruct();
 	}
 
-	/**
-	 * Get Default
-	 */
-	public static function getDefault(){
-		$model = self::model()->findByAttributes(array('defaults' => 1));
-		return $model->timezone_id;
-	}
-
-	/**
-	 * Get Locale
-	 */
-	public static function getTimezone() {
-		$model = self::model()->findAll();
-		$items = array();
-		if($model != null) {
-			foreach($model as $key => $val) {
-				$items[$val->timezone_id] = $val->title;
-			}
-			return $items;
-		}else {
-			return false;
-		}
-	}
-	
-	/**
-	 * before save attributes
-	 */
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			if(!$this->isNewRecord) {
-				if($this->defaults != 1) {
-					self::model()->updateAll(array(
-						'defaults' => 0,	
-					));
-					$this->defaults = 1;
-				}
-			}
-		}
-		return true;
+	// Get new order
+	public static function getOrder($id){
+		$model = self::model()->count(array(
+			'condition' => 'plugin_id = :plugin',
+			'params' => array(':plugin'=>$id)
+		));
+		$order = $model;
+		return $order;
 	}
 
 }

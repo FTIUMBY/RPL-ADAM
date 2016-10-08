@@ -1,10 +1,11 @@
 <?php
 /**
- * OmmuZoneCountry
+ * OmmuMenu
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2016 Ommu Platform (ommu.co)
+ * @created date 24 March 2016, 09:46 WIB
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,23 +20,31 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_zone_country".
+ * This is the model class for table "ommu_core_menu".
  *
- * The followings are the available columns in table 'ommu_core_zone_country':
- * @property integer $country_id
- * @property string $country
- * @property string $code
+ * The followings are the available columns in table 'ommu_core_menu':
+ * @property string $id
+ * @property integer $publish
+ * @property integer $cat_id
+ * @property integer $dependency
+ * @property integer $orders
+ * @property string $name
+ * @property string $url
+ * @property string $attr
+ * @property string $sitetype_access
+ * @property string $userlevel_access
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
  *
  * The followings are the available model relations:
- * @property OmmuCoreZoneProvince[] $ommuCoreZoneProvinces
+ * @property OmmuCoreMenuCategory $cat
  */
-class OmmuZoneCountry extends CActiveRecord
+class OmmuMenu extends CActiveRecord
 {
 	public $defaultColumns = array();
+	public $title;
 	
 	// Variable Search
 	public $creation_search;
@@ -43,8 +52,9 @@ class OmmuZoneCountry extends CActiveRecord
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuZoneCountry the static model class
+	 * @return OmmuMenu the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -56,7 +66,7 @@ class OmmuZoneCountry extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_zone_country';
+		return 'ommu_core_menu';
 	}
 
 	/**
@@ -67,15 +77,18 @@ class OmmuZoneCountry extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('country, code', 'required'),
-			array('country', 'length', 'max'=>64),
-			array('code', 'length', 'max'=>2),
-			array('creation_id, modified_id', 'length', 'max'=>11),
-			array('creation_id, modified_id', 'safe'),
+			array('publish, cat_id, url,
+				title', 'required'),
+			array('publish, cat_id, dependency, orders, creation_id, modified_id', 'numerical', 'integerOnly'=>true),
+			array('name, creation_id, modified_id', 'length', 'max'=>11),
+			array('sitetype_access, userlevel_access,
+				title', 'length', 'max'=>32),
+			array('url, attr', 'length', 'max'=>128),
+			array('', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('country_id, country, code, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			array('id, publish, cat_id, dependency, orders, name, url, attr, sitetype_access, userlevel_access, creation_date, creation_id, modified_date, modified_id,
+				title, creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -87,9 +100,10 @@ class OmmuZoneCountry extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'view' => array(self::BELONGS_TO, 'ViewMenu', 'id'),
+			'cat_relation' => array(self::BELONGS_TO, 'OmmuMenuCategory', 'cat_id'),
 			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
 			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
-			'province_relation' => array(self::HAS_MANY, 'OmmuZoneProvince', 'country_id'),
 		);
 	}
 
@@ -99,9 +113,16 @@ class OmmuZoneCountry extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'country_id' => Yii::t('attribute', 'Country'),
-			'country' => Yii::t('attribute', 'Country'),
-			'code' => Yii::t('attribute', 'Code'),
+			'id' => Yii::t('attribute', 'ID'),
+			'publish' => Yii::t('attribute', 'Publish'),
+			'cat_id' => Yii::t('attribute', 'Cat'),
+			'dependency' => Yii::t('attribute', 'Dependency'),
+			'orders' => Yii::t('attribute', 'Orders'),
+			'name' => Yii::t('attribute', 'Name'),
+			'url' => Yii::t('attribute', 'Url'),
+			'attr' => Yii::t('attribute', 'Attr'),
+			'sitetype_access' => Yii::t('attribute', 'Sitetype Access'),
+			'userlevel_access' => Yii::t('attribute', 'Userlevel Access'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
@@ -129,14 +150,33 @@ class OmmuZoneCountry extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.country_id',$this->country_id);
-		$criteria->compare('t.country',strtolower($this->country),true);
-		$criteria->compare('t.code',strtolower($this->code),true);
+		$criteria->compare('t.id',strtolower($this->id),true);
+		if(isset($_GET['type']) && $_GET['type'] == 'publish')
+			$criteria->compare('t.publish',1);
+		elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish')
+			$criteria->compare('t.publish',0);
+		elseif(isset($_GET['type']) && $_GET['type'] == 'trash')
+			$criteria->compare('t.publish',2);
+		else {
+			$criteria->addInCondition('t.publish',array(0,1));
+			$criteria->compare('t.publish',$this->publish);
+		}
+		if(isset($_GET['category']))
+			$criteria->compare('t.cat_id',$_GET['category']);
+		else
+			$criteria->compare('t.cat_id',$this->cat_id);
+		$criteria->compare('t.dependency',$this->dependency);
+		$criteria->compare('t.orders',$this->orders);
+		$criteria->compare('t.name',strtolower($this->name),true);
+		$criteria->compare('t.url',strtolower($this->url),true);
+		$criteria->compare('t.attr',strtolower($this->attr),true);
+		$criteria->compare('t.sitetype_access',strtolower($this->sitetype_access),true);
+		$criteria->compare('t.userlevel_access',strtolower($this->userlevel_access),true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
 		if(isset($_GET['creation']))
 			$criteria->compare('t.creation_id',$_GET['creation']);
-		 else
+		else
 			$criteria->compare('t.creation_id',$this->creation_id);
 		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
@@ -147,20 +187,24 @@ class OmmuZoneCountry extends CActiveRecord
 		
 		// Custom Search
 		$criteria->with = array(
+			'view' => array(
+				'alias'=>'view',
+			),
 			'creation_relation' => array(
 				'alias'=>'creation_relation',
-				'select'=>'displayname',
+				'select'=>'displayname'
 			),
 			'modified_relation' => array(
 				'alias'=>'modified_relation',
-				'select'=>'displayname',
+				'select'=>'displayname'
 			),
 		);
+		$criteria->compare('view.title',strtolower($this->title), true);
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
 
-		if(!isset($_GET['OmmuZoneCountry_sort']))
-			$criteria->order = 't.country_id DESC';
+		if(!isset($_GET['OmmuMenu_sort']))
+			$criteria->order = 't.id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -188,9 +232,16 @@ class OmmuZoneCountry extends CActiveRecord
 				$this->defaultColumns[] = $val;
 			}
 		} else {
-			//$this->defaultColumns[] = 'country_id';
-			$this->defaultColumns[] = 'country';
-			$this->defaultColumns[] = 'code';
+			//$this->defaultColumns[] = 'id';
+			$this->defaultColumns[] = 'publish';
+			$this->defaultColumns[] = 'cat_id';
+			$this->defaultColumns[] = 'dependency';
+			$this->defaultColumns[] = 'orders';
+			$this->defaultColumns[] = 'name';
+			$this->defaultColumns[] = 'url';
+			$this->defaultColumns[] = 'attr';
+			$this->defaultColumns[] = 'sitetype_access';
+			$this->defaultColumns[] = 'userlevel_access';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -205,12 +256,34 @@ class OmmuZoneCountry extends CActiveRecord
 	 */
 	protected function afterConstruct() {
 		if(count($this->defaultColumns) == 0) {
+			/*
+			$this->defaultColumns[] = array(
+				'class' => 'CCheckBoxColumn',
+				'name' => 'id',
+				'selectableRows' => 2,
+				'checkBoxHtmlOptions' => array('name' => 'trash_id[]')
+			);
+			*/
 			$this->defaultColumns[] = array(
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'country';
-			$this->defaultColumns[] = 'code';
+			if(!isset($_GET['category'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'cat_id',
+					'value' => 'Phrase::trans($data->cat_relation->name, 2)',
+					'filter'=> OmmuMenuCategory::getCategory(),
+					'type' => 'raw',
+				);
+			}
+			$this->defaultColumns[] = array(
+				'name' => 'title',
+				'value' => 'Phrase::trans($data->name, 2)',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'dependency',
+				'value' => '$data->dependency != 0 ? $data->dependency : "-"',
+			);
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
 				'value' => '$data->creation_relation->displayname',
@@ -241,6 +314,20 @@ class OmmuZoneCountry extends CActiveRecord
 					),
 				), true),
 			);
+			if(!isset($_GET['type'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'publish',
+					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->id)), $data->publish, 1)',
+					'htmlOptions' => array(
+						'class' => 'center',
+					),
+					'filter'=>array(
+						1=>Phrase::trans(588,0),
+						0=>Phrase::trans(589,0),
+					),
+					'type' => 'raw',
+				);
+			}
 		}
 		parent::afterConstruct();
 	}
@@ -263,32 +350,67 @@ class OmmuZoneCountry extends CActiveRecord
 	}
 
 	/**
-	 * Get country
+	 * Get category
+	 * 0 = unpublish
+	 * 1 = publish
 	 */
-	public static function getCountry() {
-		$model = self::model()->findAll();
+	public static function getParentMenu($publish=null, $dependency=null, $type=null) 
+	{		
+		$criteria=new CDbCriteria;
+		if($publish != null)
+			$criteria->compare('t.publish',$publish);
+		if($dependency != null)
+			$criteria->compare('t.dependency',$dependency);
+		
+		$model = self::model()->findAll($criteria);
 
-		$items = array();
-		if($model != null) {
-			foreach($model as $key => $val) {
-				$items[$val->country_id] = $val->country;
+		if($type == null) {
+			$items = array();
+			if($model != null) {
+				foreach($model as $key => $val) {
+					$items[$val->id] = Phrase::trans($val->name, 2);
+				}
+				return $items;
+			} else {
+				return false;
 			}
-			return $items;
-		} else {
-			return false;
-		}
+		} else
+			return $model;
 	}
 
 	/**
 	 * before validate attributes
 	 */
 	protected function beforeValidate() {
-		if(parent::beforeValidate()) {		
+		if(parent::beforeValidate()) {
 			if($this->isNewRecord)
 				$this->creation_id = Yii::app()->user->id;	
 			else
-				$this->modified_id = Yii::app()->user->id;
+				$this->modified_id = Yii::app()->user->id;				
 		}
 		return true;
 	}
+	
+	/**
+	 * before save attributes
+	 */
+	protected function beforeSave() {
+		if(parent::beforeSave()) {			
+			if($this->isNewRecord) {
+				$location = strtolower(Yii::app()->controller->id);
+				$title=new OmmuSystemPhrase;
+				$title->location = $location.'_title';
+				$title->en_us = $this->title;
+				if($title->save())
+					$this->name = $title->phrase_id;
+				
+			} else {
+				$title = OmmuSystemPhrase::model()->findByPk($this->name);
+				$title->en_us = $this->title;
+				$title->save();
+			}
+		}
+		return true;
+	}
+
 }

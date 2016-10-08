@@ -1,10 +1,11 @@
 <?php
 /**
- * OmmuTags
+ * OmmuMenuCategory
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2016 Ommu Platform (ommu.co) 
+ * @created date 15 January 2016, 16:53 WIB
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,21 +20,26 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_tags".
+ * This is the model class for table "ommu_core_menu_category".
  *
- * The followings are the available columns in table 'ommu_core_tags':
- * @property string $tag_id
+ * The followings are the available columns in table 'ommu_core_menu_category':
+ * @property integer $cat_id
  * @property integer $publish
- * @property string $body
+ * @property string $name
+ * @property string $desc
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
+ *
+ * The followings are the available model relations:
+ * @property OmmuCoreMenu[] $ommuCoreMenus
  */
-class OmmuTags extends CActiveRecord
+class OmmuMenuCategory extends CActiveRecord
 {
 	public $defaultColumns = array();
-	public $body;
+	public $title;
+	public $description;
 	
 	// Variable Search
 	public $creation_search;
@@ -41,8 +47,9 @@ class OmmuTags extends CActiveRecord
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuTags the static model class
+	 * @return OmmuMenuCategory the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -54,7 +61,7 @@ class OmmuTags extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_tags';
+		return 'ommu_core_menu_category';
 	}
 
 	/**
@@ -65,14 +72,18 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('body', 'required'),
-			array('publish', 'numerical', 'integerOnly'=>true),
-			array('body', 'length', 'max'=>64),
-			array('creation_date', 'safe'),
+			array('publish,
+				title, description', 'required'),
+			array('publish, creation_id, modified_id', 'numerical', 'integerOnly'=>true),
+			array('name, desc, creation_id, modified_id', 'length', 'max'=>11),
+			array('
+				title', 'length', 'max'=>32),
+			array('
+				description', 'length', 'max'=>128),
 			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('tag_id, publish, body, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			// @todo Please remove those attributes that should not be searched.
+			array('cat_id, publish, name, desc, creation_date, creation_id, modified_date, modified_id,
+				title, description, creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -84,8 +95,10 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'view' => array(self::BELONGS_TO, 'ViewMenuCategory', 'cat_id'),
 			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
 			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
+			'menus' => array(self::HAS_MANY, 'OmmuMenu', 'cat_id'),
 		);
 	}
 
@@ -95,50 +108,70 @@ class OmmuTags extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'tag_id' => Yii::t('attribute', 'Tag'),
+			'cat_id' => Yii::t('attribute', 'Cat'),
 			'publish' => Yii::t('attribute', 'Publish'),
-			'body' => Yii::t('attribute', 'Body'),
+			'name' => Yii::t('attribute', 'Name'),
+			'desc' => Yii::t('attribute', 'Desc'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
 			'modified_id' => Yii::t('attribute', 'Modified'),
+			'title' => Yii::t('attribute', 'Title'),
+			'description' => Yii::t('attribute', 'Description'),
 			'creation_search' => Yii::t('attribute', 'Creation'),
 			'modified_search' => Yii::t('attribute', 'Modified'),
 		);
 	}
-	
+
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
+		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.tag_id',$this->tag_id,true);
-		if(isset($_GET['type']) && $_GET['type'] == 'publish') {
+		$criteria->compare('t.cat_id',$this->cat_id);
+		if(isset($_GET['type']) && $_GET['type'] == 'publish')
 			$criteria->compare('t.publish',1);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish') {
+		elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish')
 			$criteria->compare('t.publish',0);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'trash') {
+		elseif(isset($_GET['type']) && $_GET['type'] == 'trash')
 			$criteria->compare('t.publish',2);
-		} else {
+		else {
 			$criteria->addInCondition('t.publish',array(0,1));
 			$criteria->compare('t.publish',$this->publish);
 		}
-		$criteria->compare('t.body',strtolower($this->body),true);
+		$criteria->compare('t.name',strtolower($this->name),true);
+		$criteria->compare('t.desc',strtolower($this->desc),true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
-		$criteria->compare('t.creation_id',$this->creation_id);
+		if(isset($_GET['creation']))
+			$criteria->compare('t.creation_id',$_GET['creation']);
+		else
+			$criteria->compare('t.creation_id',$this->creation_id);
 		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
-		$criteria->compare('t.modified_id',$this->modified_id);
+		if(isset($_GET['modified']))
+			$criteria->compare('t.modified_id',$_GET['modified']);
+		else
+			$criteria->compare('t.modified_id',$this->modified_id);
 		
 		// Custom Search
 		$criteria->with = array(
+			'view' => array(
+				'alias'=>'view',
+			),
 			'creation_relation' => array(
 				'alias'=>'creation_relation',
 				'select'=>'displayname'
@@ -148,11 +181,13 @@ class OmmuTags extends CActiveRecord
 				'select'=>'displayname'
 			),
 		);
+		$criteria->compare('view.title',strtolower($this->title), true);
+		$criteria->compare('view.description',strtolower($this->description), true);
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
 
-		if(!isset($_GET['OmmuTags_sort']))
-			$criteria->order = 't.tag_id DESC';
+		if(!isset($_GET['OmmuMenuCategory_sort']))
+			$criteria->order = 't.cat_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -179,10 +214,11 @@ class OmmuTags extends CActiveRecord
 				*/
 				$this->defaultColumns[] = $val;
 			}
-		}else {
-			//$this->defaultColumns[] = 'tag_id';
+		} else {
+			//$this->defaultColumns[] = 'cat_id';
 			$this->defaultColumns[] = 'publish';
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = 'name';
+			$this->defaultColumns[] = 'desc';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -209,7 +245,14 @@ class OmmuTags extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = array(
+				'name' => 'title',
+				'value' => 'Phrase::trans($data->name, 2)',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'description',
+				'value' => 'Phrase::trans($data->desc, 2)',
+			);
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
 				'value' => '$data->creation_relation->displayname',
@@ -221,8 +264,8 @@ class OmmuTags extends CActiveRecord
 					'class' => 'center',
 				),
 				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this, 
-					'attribute'=>'creation_date', 
+					'model'=>$this,
+					'attribute'=>'creation_date',
 					'language' => 'ja',
 					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
 					//'mode'=>'datetime',
@@ -243,7 +286,7 @@ class OmmuTags extends CActiveRecord
 			if(!isset($_GET['type'])) {
 				$this->defaultColumns[] = array(
 					'name' => 'publish',
-					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->tag_id)), $data->publish, 1)',
+					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->cat_id)), $data->publish, 1)',
 					'htmlOptions' => array(
 						'class' => 'center',
 					),
@@ -259,6 +302,50 @@ class OmmuTags extends CActiveRecord
 	}
 
 	/**
+	 * User get information
+	 */
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
+		}
+	}
+
+	/**
+	 * Get category
+	 * 0 = unpublish
+	 * 1 = publish
+	 */
+	public static function getCategory($publish=null, $type=null) 
+	{		
+		$criteria=new CDbCriteria;
+		if($publish != null)
+			$criteria->compare('t.publish',$publish);
+		
+		$model = self::model()->findAll($criteria);
+
+		if($type == null) {
+			$items = array();
+			if($model != null) {
+				foreach($model as $key => $val) {
+					$items[$val->cat_id] = Phrase::trans($val->name, 2);
+				}
+				return $items;
+			} else {
+				return false;
+			}
+		} else
+			return $model;
+	}
+
+	/**
 	 * before validate attributes
 	 */
 	protected function beforeValidate() {
@@ -267,7 +354,6 @@ class OmmuTags extends CActiveRecord
 				$this->creation_id = Yii::app()->user->id;	
 			else
 				$this->modified_id = Yii::app()->user->id;
-
 		}
 		return true;
 	}
@@ -277,8 +363,31 @@ class OmmuTags extends CActiveRecord
 	 */
 	protected function beforeSave() {
 		if(parent::beforeSave()) {
-			$this->body = strtolower(trim($this->body));
+			if($this->isNewRecord) {
+				$location = strtolower(Yii::app()->controller->id);
+				$title=new OmmuSystemPhrase;
+				$title->location = $location.'_title';
+				$title->en_us = $this->title;
+				if($title->save())
+					$this->name = $title->phrase_id;
+
+				$desc=new OmmuSystemPhrase;
+				$desc->location = $location.'_description';
+				$desc->en_us = $this->description;
+				if($desc->save())
+					$this->desc = $desc->phrase_id;
+				
+			} else {
+				$title = OmmuSystemPhrase::model()->findByPk($this->name);
+				$title->en_us = $this->title;
+				$title->save();
+
+				$desc = OmmuSystemPhrase::model()->findByPk($this->desc);
+				$desc->en_us = $this->description;
+				$desc->save();
+			}
 		}
-		return true;	
+		return true;
 	}
+
 }

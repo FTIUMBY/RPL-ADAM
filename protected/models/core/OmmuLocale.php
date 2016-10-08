@@ -1,9 +1,11 @@
 <?php
-
 /**
- * @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
- * @copyright Copyright (c) 2014 Ommu Platform (ommu.co)
- * @link http://company.ommu.co
+ * OmmuLocale
+ * version: 1.1.0
+ *
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
  * This is the template for generating the model class of a specified table.
@@ -30,6 +32,8 @@ class OmmuLocale extends CActiveRecord
 	public $defaultColumns = array();
 	public $default_locale;
 	public $timezone;
+	public $dateformat;
+	public $timeformat;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -58,7 +62,7 @@ class OmmuLocale extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('
-				default_locale, timezone', 'required'),
+				default_locale, timezone, dateformat, timeformat', 'required'),
 			array('defaults,
 				default_locale, timezone', 'numerical', 'integerOnly'=>true),
 			array('locale', 'length', 'max'=>16),
@@ -86,12 +90,14 @@ class OmmuLocale extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'locale_id' => 'Locale',
-			'defaults' => 'Defaults',
-			'locale' => 'Locale',
-			'title' => 'Description',
-			'default_locale' => 'Default Locale',
-			'timezone' => 'Default Timezone',
+			'locale_id' => Yii::t('attribute', 'Locale'),
+			'defaults' => Yii::t('attribute', 'Defaults'),
+			'locale' => Yii::t('attribute', 'Locale'),
+			'title' => Yii::t('attribute', 'Title'),
+			'default_locale' => Yii::t('attribute', 'Default Locale'),
+			'timezone' => Yii::t('attribute', 'Timezone'),
+			'dateformat' => Yii::t('attribute', 'Date Format'),
+			'timeformat' => Yii::t('attribute', 'Time Format'),
 		);
 	}
 	
@@ -112,7 +118,7 @@ class OmmuLocale extends CActiveRecord
 		$criteria->compare('t.title',strtolower($this->title),true);
 
 		if(!isset($_GET['OmmuLocale_sort']))
-			$criteria->order = 'locale_id DESC';
+			$criteria->order = 't.locale_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -181,6 +187,18 @@ class OmmuLocale extends CActiveRecord
 		}else {
 			return false;
 		}
+	}
+
+	/**
+	 * before validate attributes
+	 */
+	protected function beforeValidate() {
+		if(parent::beforeValidate()) {
+			if($this->dateformat == '' || $this->timeformat == '') {
+				$this->addError('dateformat', Yii::t('phrase', 'Date Format cannot be blank.'));
+			}
+		}
+		return true;
 	}
 	
 	/**

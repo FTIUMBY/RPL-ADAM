@@ -1,6 +1,6 @@
 <?php
 /**
- * OmmuTags
+ * OmmuTemplate
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
@@ -19,30 +19,33 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_tags".
+ * This is the model class for table "ommu_core_template".
  *
- * The followings are the available columns in table 'ommu_core_tags':
- * @property string $tag_id
- * @property integer $publish
- * @property string $body
+ * The followings are the available columns in table 'ommu_core_template':
+ * @property string $template_key
+ * @property integer $plugin_id
+ * @property string $user_id
+ * @property string $template
+ * @property string $variable
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
  */
-class OmmuTags extends CActiveRecord
+class OmmuTemplate extends CActiveRecord
 {
 	public $defaultColumns = array();
-	public $body;
 	
 	// Variable Search
+	public $user_search;
 	public $creation_search;
 	public $modified_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuTags the static model class
+	 * @return OmmuTemplate the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -54,7 +57,7 @@ class OmmuTags extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_tags';
+		return 'ommu_core_template';
 	}
 
 	/**
@@ -65,14 +68,15 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('body', 'required'),
-			array('publish', 'numerical', 'integerOnly'=>true),
-			array('body', 'length', 'max'=>64),
-			array('creation_date', 'safe'),
+			array('template_key, plugin_id, template, variable', 'required'),
+			array('plugin_id', 'numerical', 'integerOnly'=>true),
+			array('template_key', 'length', 'max'=>32),
+			array('user_id, modified_id', 'length', 'max'=>11),
+			array('modified_date', 'safe'),
 			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('tag_id, publish, body, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			// @todo Please remove those attributes that should not be searched.
+			array('template_key, plugin_id, user_id, template, variable, creation_date, creation_id, modified_date, modified_id,
+				user_search, creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -84,6 +88,9 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'plugin' => array(self::BELONGS_TO, 'OmmuPlugins', 'plugin_id'),
+			'modified' => array(self::BELONGS_TO, 'Users', 'modified_id'),
+			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
 			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
 			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
 		);
@@ -95,50 +102,67 @@ class OmmuTags extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'tag_id' => Yii::t('attribute', 'Tag'),
-			'publish' => Yii::t('attribute', 'Publish'),
-			'body' => Yii::t('attribute', 'Body'),
+			'template_key' => Yii::t('attribute', 'Template Key'),
+			'plugin_id' => Yii::t('attribute', 'Plugin'),
+			'user_id' => Yii::t('attribute', 'User'),
+			'template' => Yii::t('attribute', 'Template'),
+			'variable' => Yii::t('attribute', 'Variable'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
 			'modified_id' => Yii::t('attribute', 'Modified'),
+			'user_search' => Yii::t('attribute', 'User'),
 			'creation_search' => Yii::t('attribute', 'Creation'),
 			'modified_search' => Yii::t('attribute', 'Modified'),
 		);
 	}
-	
+
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
+		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.tag_id',$this->tag_id,true);
-		if(isset($_GET['type']) && $_GET['type'] == 'publish') {
-			$criteria->compare('t.publish',1);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish') {
-			$criteria->compare('t.publish',0);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'trash') {
-			$criteria->compare('t.publish',2);
+		$criteria->compare('t.template_key',$this->template_key,true);
+		$criteria->compare('t.plugin_id',$this->plugin_id);
+		if(isset($_GET['user'])) {
+			$criteria->compare('t.user_id',$_GET['user']);
 		} else {
-			$criteria->addInCondition('t.publish',array(0,1));
-			$criteria->compare('t.publish',$this->publish);
+			$criteria->compare('t.user_id',$this->user_id);
 		}
-		$criteria->compare('t.body',strtolower($this->body),true);
+		$criteria->compare('t.template',$this->template,true);
+		$criteria->compare('t.variable',$this->variable,true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
-		$criteria->compare('t.creation_id',$this->creation_id);
+		if(isset($_GET['creation']))
+			$criteria->compare('t.creation_id',$_GET['creation']);
+		else
+			$criteria->compare('t.creation_id',$this->creation_id);
 		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
-		$criteria->compare('t.modified_id',$this->modified_id);
+		if(isset($_GET['modified']))
+			$criteria->compare('t.modified_id',$_GET['modified']);
+		else
+			$criteria->compare('t.modified_id',$this->modified_id);
 		
 		// Custom Search
 		$criteria->with = array(
+			'user' => array(
+				'alias'=>'user',
+				'select'=>'displayname'
+			),
 			'creation_relation' => array(
 				'alias'=>'creation_relation',
 				'select'=>'displayname'
@@ -148,11 +172,12 @@ class OmmuTags extends CActiveRecord
 				'select'=>'displayname'
 			),
 		);
+		$criteria->compare('user.displayname',strtolower($this->user_search), true);
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
 
-		if(!isset($_GET['OmmuTags_sort']))
-			$criteria->order = 't.tag_id DESC';
+		if(!isset($_GET['OmmuTemplate_sort']))
+			$criteria->order = 't.template_key DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -179,10 +204,12 @@ class OmmuTags extends CActiveRecord
 				*/
 				$this->defaultColumns[] = $val;
 			}
-		}else {
-			//$this->defaultColumns[] = 'tag_id';
-			$this->defaultColumns[] = 'publish';
-			$this->defaultColumns[] = 'body';
+		} else {
+			//$this->defaultColumns[] = 'template_key';
+			$this->defaultColumns[] = 'plugin_id';
+			$this->defaultColumns[] = 'user_id';
+			$this->defaultColumns[] = 'template';
+			$this->defaultColumns[] = 'variable';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -197,19 +224,25 @@ class OmmuTags extends CActiveRecord
 	 */
 	protected function afterConstruct() {
 		if(count($this->defaultColumns) == 0) {
-			/*
-			$this->defaultColumns[] = array(
-				'class' => 'CCheckBoxColumn',
-				'name' => 'id',
-				'selectableRows' => 2,
-				'checkBoxHtmlOptions' => array('name' => 'trash_id[]')
-			);
-			*/
 			$this->defaultColumns[] = array(
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = array(
+				'name' => 'plugin_id',
+				'value' => '$data->plugin->name',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>OmmuPlugins::getPlugin(0, 'id'),
+				'type' => 'raw',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'template_key',
+				'value' => '$data->template_key',
+			);
+			//$this->defaultColumns[] = 'template';
+			$this->defaultColumns[] = 'variable';
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
 				'value' => '$data->creation_relation->displayname',
@@ -221,8 +254,8 @@ class OmmuTags extends CActiveRecord
 					'class' => 'center',
 				),
 				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this, 
-					'attribute'=>'creation_date', 
+					'model'=>$this,
+					'attribute'=>'creation_date',
 					'language' => 'ja',
 					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
 					//'mode'=>'datetime',
@@ -240,45 +273,67 @@ class OmmuTags extends CActiveRecord
 					),
 				), true),
 			);
-			if(!isset($_GET['type'])) {
-				$this->defaultColumns[] = array(
-					'name' => 'publish',
-					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->tag_id)), $data->publish, 1)',
-					'htmlOptions' => array(
-						'class' => 'center',
-					),
-					'filter'=>array(
-						1=>Yii::t('phrase', 'Yes'),
-						0=>Yii::t('phrase', 'No'),
-					),
-					'type' => 'raw',
-				);
-			}
 		}
 		parent::afterConstruct();
+	}
+
+	/**
+	 * User get information
+	 */
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
+		}
+	}
+
+	/**
+	 * User get information
+	 */
+	public static function getMessage($template_key, $other=null)
+	{
+		$model = self::model()->findByPk($template_key);
+		
+		if(!empty($other)) {
+			$replace = array();
+			$search = array();
+			$i = 0;
+			foreach($other as $label=>$url) {
+				$i++;
+				if(is_string($label) || is_array($url))
+					//$replace[] = CHtml::link($this->getEncodeLabel() ? CHtml::encode($label) : $label, $url, array('title'=>$label));
+					$replace[] = CHtml::link($label, $url, array('title'=>$label));
+				else
+					//$replace[] = $this->getEncodeLabel() ? CHtml::encode($url) : $url;
+					$replace[] = $url;
+				$search[] = '$'.$i.'';
+			}
+			$message = str_replace($search, $replace, $model->template);
+			
+		} else
+			$message = $model->template;
+		
+		return $message;
 	}
 
 	/**
 	 * before validate attributes
 	 */
 	protected function beforeValidate() {
-		if(parent::beforeValidate()) {		
+		if(parent::beforeValidate()) {	
 			if($this->isNewRecord)
-				$this->creation_id = Yii::app()->user->id;	
+				$this->user_id = Yii::app()->user->id;
 			else
 				$this->modified_id = Yii::app()->user->id;
-
 		}
 		return true;
 	}
-	
-	/**
-	 * before save attributes
-	 */
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			$this->body = strtolower(trim($this->body));
-		}
-		return true;	
-	}
+
 }

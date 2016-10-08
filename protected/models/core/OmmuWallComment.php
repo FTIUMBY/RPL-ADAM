@@ -1,10 +1,10 @@
 <?php
 /**
- * OmmuTags
+ * OmmuWallComment
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,30 +19,35 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_tags".
+ * This is the model class for table "ommu_core_wall_comment".
  *
- * The followings are the available columns in table 'ommu_core_tags':
- * @property string $tag_id
+ * The followings are the available columns in table 'ommu_core_wall_comment':
+ * @property string $comment_id
  * @property integer $publish
- * @property string $body
+ * @property integer $parent_id
+ * @property string $wall_id
+ * @property string $user_id
+ * @property string $comment
  * @property string $creation_date
- * @property string $creation_id
  * @property string $modified_date
- * @property string $modified_id
+ *
+ * The followings are the available model relations:
+ * @property OmmuWalls $wall
+ * @property OmmuWallCommentLike[] $ommuWallCommentLikes
  */
-class OmmuTags extends CActiveRecord
+class OmmuWallComment extends CActiveRecord
 {
 	public $defaultColumns = array();
-	public $body;
 	
 	// Variable Search
-	public $creation_search;
-	public $modified_search;
+	public $wall_search;
+	public $user_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuTags the static model class
+	 * @return OmmuWallComment the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -54,7 +59,7 @@ class OmmuTags extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_tags';
+		return 'ommu_core_wall_comment';
 	}
 
 	/**
@@ -65,14 +70,14 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('body', 'required'),
-			array('publish', 'numerical', 'integerOnly'=>true),
-			array('body', 'length', 'max'=>64),
-			array('creation_date', 'safe'),
+			array('wall_id, user_id, comment', 'required'),
+			array('publish, parent_id', 'numerical', 'integerOnly'=>true),
+			array('wall_id, user_id', 'length', 'max'=>11),
+			array('modified_date', 'safe'),
 			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('tag_id, publish, body, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			// @todo Please remove those attributes that should not be searched.
+			array('comment_id, publish, parent_id, wall_id, user_id, comment, creation_date, modified_date,
+				wall_search, user_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -84,8 +89,9 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
-			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
+			'wall' => array(self::BELONGS_TO, 'OmmuWalls', 'wall_id'),
+			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
+			'OmmuWallLikes' => array(self::HAS_MANY, 'OmmuWallLikes', 'comment_id'),
 		);
 	}
 
@@ -95,30 +101,38 @@ class OmmuTags extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'tag_id' => Yii::t('attribute', 'Tag'),
+			'comment_id' => Yii::t('attribute', 'Comment'),
 			'publish' => Yii::t('attribute', 'Publish'),
-			'body' => Yii::t('attribute', 'Body'),
+			'parent_id' => Yii::t('attribute', 'Parent'),
+			'wall_id' => Yii::t('attribute', 'Wall'),
+			'user_id' => Yii::t('attribute', 'User'),
+			'comment' => Yii::t('attribute', 'Comment'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
-			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
-			'modified_id' => Yii::t('attribute', 'Modified'),
-			'creation_search' => Yii::t('attribute', 'Creation'),
-			'modified_search' => Yii::t('attribute', 'Modified'),
+			'wall_search' => Yii::t('attribute', 'Wall'),
+			'user_search' => Yii::t('attribute', 'User'),
 		);
 	}
-	
+
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
+		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.tag_id',$this->tag_id,true);
+		$criteria->compare('t.comment_id',$this->comment_id,true);
 		if(isset($_GET['type']) && $_GET['type'] == 'publish') {
 			$criteria->compare('t.publish',1);
 		} elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish') {
@@ -129,30 +143,39 @@ class OmmuTags extends CActiveRecord
 			$criteria->addInCondition('t.publish',array(0,1));
 			$criteria->compare('t.publish',$this->publish);
 		}
-		$criteria->compare('t.body',strtolower($this->body),true);
+		$criteria->compare('t.parent_id',$this->parent_id);
+		if(isset($_GET['wall'])) {
+			$criteria->compare('t.wall_id',$_GET['wall']);
+		} else {
+			$criteria->compare('t.wall_id',$this->wall_id);
+		}
+		if(isset($_GET['user'])) {
+			$criteria->compare('t.user_id',$_GET['user']);
+		} else {
+			$criteria->compare('t.user_id',$this->user_id);
+		}
+		$criteria->compare('t.comment',$this->comment,true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
-		$criteria->compare('t.creation_id',$this->creation_id);
 		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
-		$criteria->compare('t.modified_id',$this->modified_id);
 		
 		// Custom Search
 		$criteria->with = array(
-			'creation_relation' => array(
-				'alias'=>'creation_relation',
-				'select'=>'displayname'
+			'wall' => array(
+				'alias'=>'wall',
+				'select'=>'wall_status'
 			),
-			'modified_relation' => array(
-				'alias'=>'modified_relation',
+			'user' => array(
+				'alias'=>'user',
 				'select'=>'displayname'
 			),
 		);
-		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
-		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
+		$criteria->compare('wall.wall_status',strtolower($this->wall_search), true);
+		$criteria->compare('user.displayname',strtolower($this->user_search), true);
 
-		if(!isset($_GET['OmmuTags_sort']))
-			$criteria->order = 't.tag_id DESC';
+		if(!isset($_GET['OmmuWallComment_sort']))
+			$criteria->order = 't.comment_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -179,14 +202,15 @@ class OmmuTags extends CActiveRecord
 				*/
 				$this->defaultColumns[] = $val;
 			}
-		}else {
-			//$this->defaultColumns[] = 'tag_id';
+		} else {
+			//$this->defaultColumns[] = 'comment_id';
 			$this->defaultColumns[] = 'publish';
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = 'parent_id';
+			$this->defaultColumns[] = 'wall_id';
+			$this->defaultColumns[] = 'user_id';
+			$this->defaultColumns[] = 'comment';
 			$this->defaultColumns[] = 'creation_date';
-			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
-			$this->defaultColumns[] = 'modified_id';
 		}
 
 		return $this->defaultColumns;
@@ -209,11 +233,20 @@ class OmmuTags extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'body';
-			$this->defaultColumns[] = array(
-				'name' => 'creation_search',
-				'value' => '$data->creation_relation->displayname',
-			);
+			$this->defaultColumns[] = 'parent_id';
+			if(!isset($_GET['wall'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'wall_search',
+					'value' => '$data->wall->wall_status',
+				);
+			}
+			if(!isset($_GET['user'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'user_search',
+					'value' => '$data->user->displayname',
+				);
+			}
+			$this->defaultColumns[] = 'comment';
 			$this->defaultColumns[] = array(
 				'name' => 'creation_date',
 				'value' => 'Utility::dateFormat($data->creation_date)',
@@ -221,8 +254,8 @@ class OmmuTags extends CActiveRecord
 					'class' => 'center',
 				),
 				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this, 
-					'attribute'=>'creation_date', 
+					'model'=>$this,
+					'attribute'=>'creation_date',
 					'language' => 'ja',
 					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
 					//'mode'=>'datetime',
@@ -243,7 +276,7 @@ class OmmuTags extends CActiveRecord
 			if(!isset($_GET['type'])) {
 				$this->defaultColumns[] = array(
 					'name' => 'publish',
-					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->tag_id)), $data->publish, 1)',
+					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->comment_id)), $data->publish, 1)',
 					'htmlOptions' => array(
 						'class' => 'center',
 					),
@@ -259,26 +292,32 @@ class OmmuTags extends CActiveRecord
 	}
 
 	/**
+	 * User get information
+	 */
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
+		}
+	}
+
+	/**
 	 * before validate attributes
 	 */
 	protected function beforeValidate() {
 		if(parent::beforeValidate()) {		
-			if($this->isNewRecord)
-				$this->creation_id = Yii::app()->user->id;	
-			else
-				$this->modified_id = Yii::app()->user->id;
-
+			if($this->isNewRecord) {
+				$this->user_id = Yii::app()->user->id;
+			}
 		}
 		return true;
 	}
-	
-	/**
-	 * before save attributes
-	 */
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			$this->body = strtolower(trim($this->body));
-		}
-		return true;	
-	}
+
 }

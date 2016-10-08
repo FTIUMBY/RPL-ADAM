@@ -1,10 +1,10 @@
 <?php
 /**
- * OmmuTimezone
+ * ViewCorePages
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,22 +19,22 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_timezone".
+ * This is the model class for table "_view_core_pages".
  *
- * The followings are the available columns in table 'ommu_core_timezone':
- * @property integer $timezone_id
- * @property integer $defaults
- * @property string $timezone
+ * The followings are the available columns in table '_view_core_pages':
+ * @property integer $page_id
  * @property string $title
+ * @property string $description
  */
-class OmmuTimezone extends CActiveRecord
+class ViewPages extends CActiveRecord
 {
 	public $defaultColumns = array();
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuTimezone the static model class
+	 * @return ViewCorePages the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -46,7 +46,15 @@ class OmmuTimezone extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_timezone';
+		return '_view_core_pages';
+	}
+
+	/**
+	 * @return string the primarykey column
+	 */
+	public function primaryKey()
+	{
+		return 'page_id';
 	}
 
 	/**
@@ -57,13 +65,11 @@ class OmmuTimezone extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('timezone, title', 'required'),
-			array('defaults', 'numerical', 'integerOnly'=>true),
-			array('timezone', 'length', 'max'=>32),
-			array('title', 'length', 'max'=>64),
+			array('page_id', 'numerical', 'integerOnly'=>true),
+			array('title, description', 'safe'),
 			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('timezone_id, defaults, timezone, title', 'safe', 'on'=>'search'),
+			// @todo Please remove those attributes that should not be searched.
+			array('page_id, title, description', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -84,31 +90,36 @@ class OmmuTimezone extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'timezone_id' => Yii::t('attribute', 'Timezone'),
-			'defaults' => Yii::t('attribute', 'Defaults'),
-			'timezone' => Yii::t('attribute', 'Timezone'),
+			'page_id' => Yii::t('attribute', 'Page'),
 			'title' => Yii::t('attribute', 'Title'),
+			'description' => Yii::t('attribute', 'Description'),
 		);
 	}
-	
+
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
+		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.timezone_id',$this->timezone_id);
-		$criteria->compare('t.defaults',$this->defaults);
-		$criteria->compare('t.timezone',strtolower($this->timezone),true);
+		$criteria->compare('t.page_id',$this->page_id);
 		$criteria->compare('t.title',strtolower($this->title),true);
+		$criteria->compare('t.description',strtolower($this->description),true);
 
-		if(!isset($_GET['OmmuTimezone_sort']))
-			$criteria->order = 't.timezone_id DESC';
+		if(!isset($_GET['ViewCorePages_sort']))
+			$criteria->order = 't.page_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -117,6 +128,7 @@ class OmmuTimezone extends CActiveRecord
 			),
 		));
 	}
+
 
 	/**
 	 * Get column for CGrid View
@@ -134,11 +146,10 @@ class OmmuTimezone extends CActiveRecord
 				*/
 				$this->defaultColumns[] = $val;
 			}
-		}else {
-			//$this->defaultColumns[] = 'timezone_id';
-			$this->defaultColumns[] = 'defaults';
-			$this->defaultColumns[] = 'timezone';
+		} else {
+			$this->defaultColumns[] = 'page_id';
 			$this->defaultColumns[] = 'title';
+			$this->defaultColumns[] = 'description';
 		}
 
 		return $this->defaultColumns;
@@ -149,53 +160,31 @@ class OmmuTimezone extends CActiveRecord
 	 */
 	protected function afterConstruct() {
 		if(count($this->defaultColumns) == 0) {
-			$this->defaultColumns[] = 'timezone_id';
-			$this->defaultColumns[] = 'defaults';
-			$this->defaultColumns[] = 'timezone';
+			$this->defaultColumns[] = array(
+				'header' => 'No',
+				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
+			);
+			$this->defaultColumns[] = 'page_id';
 			$this->defaultColumns[] = 'title';
+			$this->defaultColumns[] = 'description';
 		}
 		parent::afterConstruct();
 	}
 
 	/**
-	 * Get Default
+	 * User get information
 	 */
-	public static function getDefault(){
-		$model = self::model()->findByAttributes(array('defaults' => 1));
-		return $model->timezone_id;
-	}
-
-	/**
-	 * Get Locale
-	 */
-	public static function getTimezone() {
-		$model = self::model()->findAll();
-		$items = array();
-		if($model != null) {
-			foreach($model as $key => $val) {
-				$items[$val->timezone_id] = $val->title;
-			}
-			return $items;
-		}else {
-			return false;
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
 		}
 	}
-	
-	/**
-	 * before save attributes
-	 */
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			if(!$this->isNewRecord) {
-				if($this->defaults != 1) {
-					self::model()->updateAll(array(
-						'defaults' => 0,	
-					));
-					$this->defaults = 1;
-				}
-			}
-		}
-		return true;
-	}
-
 }

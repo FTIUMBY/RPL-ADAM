@@ -1,6 +1,6 @@
 <?php
 /**
- * OmmuTags
+ * OmmuLanguages
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
@@ -19,21 +19,23 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_tags".
+ * This is the model class for table "ommu_core_languages".
  *
- * The followings are the available columns in table 'ommu_core_tags':
- * @property string $tag_id
- * @property integer $publish
- * @property string $body
+ * The followings are the available columns in table 'ommu_core_languages':
+ * @property integer $language_id
+ * @property integer $actived
+ * @property integer $defaults
+ * @property string $code
+ * @property integer $orders
+ * @property string $name
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
  */
-class OmmuTags extends CActiveRecord
+class OmmuLanguages extends CActiveRecord
 {
 	public $defaultColumns = array();
-	public $body;
 	
 	// Variable Search
 	public $creation_search;
@@ -42,7 +44,7 @@ class OmmuTags extends CActiveRecord
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @param string $className active record class name.
-	 * @return OmmuTags the static model class
+	 * @return OmmuLanguages the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -54,7 +56,7 @@ class OmmuTags extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_tags';
+		return 'ommu_core_languages';
 	}
 
 	/**
@@ -65,13 +67,13 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('body', 'required'),
-			array('publish', 'numerical', 'integerOnly'=>true),
-			array('body', 'length', 'max'=>64),
-			array('creation_date', 'safe'),
+			array('code, name', 'required'),
+			array('actived, defaults, orders', 'numerical', 'integerOnly'=>true),
+			array('code', 'length', 'max'=>6),
+			array('name', 'length', 'max'=>32),
 			// The following rule is used by search().
 			// Please remove those attributes that should not be searched.
-			array('tag_id, publish, body, creation_date, creation_id, modified_date, modified_id,
+			array('language_id, actived, defaults, code, orders, name, creation_date, creation_id, modified_date, modified_id,
 				creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
@@ -95,9 +97,12 @@ class OmmuTags extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'tag_id' => Yii::t('attribute', 'Tag'),
-			'publish' => Yii::t('attribute', 'Publish'),
-			'body' => Yii::t('attribute', 'Body'),
+			'language_id' => Yii::t('attribute', 'Language'),
+			'actived' => Yii::t('attribute', 'Actived'),
+			'defaults' => Yii::t('attribute', 'Defaults'),
+			'code' => Yii::t('attribute', 'Language Code'),
+			'orders' => Yii::t('attribute', 'Orders'),
+			'name' => Yii::t('attribute', 'Language Name'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
@@ -118,18 +123,12 @@ class OmmuTags extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.tag_id',$this->tag_id,true);
-		if(isset($_GET['type']) && $_GET['type'] == 'publish') {
-			$criteria->compare('t.publish',1);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish') {
-			$criteria->compare('t.publish',0);
-		} elseif(isset($_GET['type']) && $_GET['type'] == 'trash') {
-			$criteria->compare('t.publish',2);
-		} else {
-			$criteria->addInCondition('t.publish',array(0,1));
-			$criteria->compare('t.publish',$this->publish);
-		}
-		$criteria->compare('t.body',strtolower($this->body),true);
+		$criteria->compare('language_id',$this->language_id);
+		$criteria->compare('actived',$this->actived);
+		$criteria->compare('defaults',$this->defaults);
+		$criteria->compare('code',strtolower($this->code),true);
+		$criteria->compare('orders',$this->orders);
+		$criteria->compare('name',strtolower($this->name),true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
 		$criteria->compare('t.creation_id',$this->creation_id);
@@ -150,9 +149,9 @@ class OmmuTags extends CActiveRecord
 		);
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
-
-		if(!isset($_GET['OmmuTags_sort']))
-			$criteria->order = 't.tag_id DESC';
+		
+		if(!isset($_GET['OmmuLanguages_sort']))
+			$criteria->order = 't.language_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -180,9 +179,12 @@ class OmmuTags extends CActiveRecord
 				$this->defaultColumns[] = $val;
 			}
 		}else {
-			//$this->defaultColumns[] = 'tag_id';
-			$this->defaultColumns[] = 'publish';
-			$this->defaultColumns[] = 'body';
+			//$this->defaultColumns[] = 'language_id';
+			$this->defaultColumns[] = 'actived';
+			$this->defaultColumns[] = 'defaults';
+			$this->defaultColumns[] = 'code';
+			$this->defaultColumns[] = 'orders';
+			$this->defaultColumns[] = 'name';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -197,65 +199,80 @@ class OmmuTags extends CActiveRecord
 	 */
 	protected function afterConstruct() {
 		if(count($this->defaultColumns) == 0) {
-			/*
-			$this->defaultColumns[] = array(
-				'class' => 'CCheckBoxColumn',
-				'name' => 'id',
-				'selectableRows' => 2,
-				'checkBoxHtmlOptions' => array('name' => 'trash_id[]')
-			);
-			*/
 			$this->defaultColumns[] = array(
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = 'name';
+			$this->defaultColumns[] = 'code';
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
 				'value' => '$data->creation_relation->displayname',
 			);
 			$this->defaultColumns[] = array(
-				'name' => 'creation_date',
-				'value' => 'Utility::dateFormat($data->creation_date)',
+				'name'  => 'defaults',
+				'value' => '$data->defaults == 0 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\')',
 				'htmlOptions' => array(
 					'class' => 'center',
 				),
-				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this, 
-					'attribute'=>'creation_date', 
-					'language' => 'ja',
-					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
-					//'mode'=>'datetime',
-					'htmlOptions' => array(
-						'id' => 'creation_date_filter',
-					),
-					'options'=>array(
-						'showOn' => 'focus',
-						'dateFormat' => 'dd-mm-yy',
-						'showOtherMonths' => true,
-						'selectOtherMonths' => true,
-						'changeMonth' => true,
-						'changeYear' => true,
-						'showButtonPanel' => true,
-					),
-				), true),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
 			);
-			if(!isset($_GET['type'])) {
-				$this->defaultColumns[] = array(
-					'name' => 'publish',
-					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->tag_id)), $data->publish, 1)',
-					'htmlOptions' => array(
-						'class' => 'center',
-					),
-					'filter'=>array(
-						1=>Yii::t('phrase', 'Yes'),
-						0=>Yii::t('phrase', 'No'),
-					),
-					'type' => 'raw',
-				);
-			}
+			$this->defaultColumns[] = array(
+				'name' => 'actived',
+				'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("actived",array("id"=>$data->language_id)), $data->actived, 2)',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
+			);
 		}
 		parent::afterConstruct();
+	}
+
+	/**
+	 * Get Language
+	 */
+	public static function getLanguage($actived=null, $type=null, $view=null) 
+	{
+		$criteria=new CDbCriteria;
+		if($actived != null)
+			$criteria->compare('t.actived',$actived);
+		$criteria->order = 't.orders ASC';
+		
+		$model = self::model()->findAll($criteria);
+		
+		if($type == null) {
+			$items = array();
+			if($model != null) {
+				foreach($model as $key => $val) {
+					if($view == null)
+						$items[$val->language_id] = $val->name;
+					else
+						$items[$val->code] = $val->name;
+				}
+				return $items;
+				
+			} else
+				return false;
+			
+		} else
+			return $model;
+	}
+
+	/**
+	 * Get Default
+	 */
+	public static function getDefault(){
+		$model = self::model()->findByAttributes(array('defaults' => 1));
+		return $model->language_id;
 	}
 
 	/**
@@ -263,11 +280,13 @@ class OmmuTags extends CActiveRecord
 	 */
 	protected function beforeValidate() {
 		if(parent::beforeValidate()) {		
-			if($this->isNewRecord)
+			if($this->isNewRecord) {
+				if ($this->defaults == 1)
+					$this->actived = 1;
+				$this->orders = 1;
 				$this->creation_id = Yii::app()->user->id;	
-			else
-				$this->modified_id = Yii::app()->user->id;
-
+			} else
+				$this->modified_id = Yii::app()->user->id;	
 		}
 		return true;
 	}
@@ -277,8 +296,38 @@ class OmmuTags extends CActiveRecord
 	 */
 	protected function beforeSave() {
 		if(parent::beforeSave()) {
-			$this->body = strtolower(trim($this->body));
+			// Language set to default
+			if ($this->defaults == 1) {
+				self::model()->updateAll(array(
+					'defaults' => 0,	
+				));
+				$this->defaults = 1;
+			}
 		}
-		return true;	
+		return true;
 	}
+	
+	/**
+	 * After save attributes
+	 */
+	protected function afterSave() {
+		parent::afterSave();
+		if($this->isNewRecord) {
+			// Add column in mysql
+			$conn = Yii::app()->db;
+			$sql .= "ALTER TABLE ommu_core_system_phrase ADD COLUMN `$this->code` text NOT NULL default ''";
+			$conn->createCommand($sql)->execute();
+		}
+	}
+
+	protected function afterDelete() {
+		parent::afterDelete();
+
+		// Delete column in mysql
+		$conn = Yii::app()->db;
+		$sql .= "ALTER TABLE ommu_core_system_phrase DROP COLUMN `$this->code`";
+		$conn->createCommand($sql)->execute();
+
+	}
+
 }

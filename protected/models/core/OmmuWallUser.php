@@ -1,10 +1,10 @@
 <?php
 /**
- * OmmuZoneCountry
+ * OmmuWallUser
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,32 +19,31 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_zone_country".
+ * This is the model class for table "ommu_core_wall_user".
  *
- * The followings are the available columns in table 'ommu_core_zone_country':
- * @property integer $country_id
- * @property string $country
- * @property string $code
+ * The followings are the available columns in table 'ommu_core_wall_user':
+ * @property string $id
+ * @property integer $status
+ * @property string $wall_id
+ * @property string $user_id
  * @property string $creation_date
- * @property string $creation_id
- * @property string $modified_date
- * @property string $modified_id
  *
  * The followings are the available model relations:
- * @property OmmuCoreZoneProvince[] $ommuCoreZoneProvinces
+ * @property OmmuWalls $wall
  */
-class OmmuZoneCountry extends CActiveRecord
+class OmmuWallUser extends CActiveRecord
 {
 	public $defaultColumns = array();
 	
 	// Variable Search
-	public $creation_search;
-	public $modified_search;
+	public $wall_search;
+	public $user_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuZoneCountry the static model class
+	 * @return OmmuWallUser the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -56,7 +55,7 @@ class OmmuZoneCountry extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_zone_country';
+		return 'ommu_core_wall_user';
 	}
 
 	/**
@@ -67,15 +66,13 @@ class OmmuZoneCountry extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('country, code', 'required'),
-			array('country', 'length', 'max'=>64),
-			array('code', 'length', 'max'=>2),
-			array('creation_id, modified_id', 'length', 'max'=>11),
-			array('creation_id, modified_id', 'safe'),
+			array('wall_id, user_id, creation_date', 'required'),
+			array('status', 'numerical', 'integerOnly'=>true),
+			array('wall_id, user_id', 'length', 'max'=>11),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('country_id, country, code, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			array('id, status, wall_id, user_id, creation_date,
+				wall_search, user_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -87,9 +84,8 @@ class OmmuZoneCountry extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
-			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
-			'province_relation' => array(self::HAS_MANY, 'OmmuZoneProvince', 'country_id'),
+			'wall' => array(self::BELONGS_TO, 'OmmuWalls', 'wall_id'),
+			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
 		);
 	}
 
@@ -99,15 +95,13 @@ class OmmuZoneCountry extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'country_id' => Yii::t('attribute', 'Country'),
-			'country' => Yii::t('attribute', 'Country'),
-			'code' => Yii::t('attribute', 'Code'),
+			'id' => Yii::t('attribute', 'ID'),
+			'status' => Yii::t('attribute', 'Status'),
+			'wall_id' => Yii::t('attribute', 'Wall'),
+			'user_id' => Yii::t('attribute', 'User'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
-			'creation_id' => Yii::t('attribute', 'Creation'),
-			'modified_date' => Yii::t('attribute', 'Modified Date'),
-			'modified_id' => Yii::t('attribute', 'Modified'),
-			'creation_search' => Yii::t('attribute', 'Creation'),
-			'modified_search' => Yii::t('attribute', 'Modified'),
+			'wall_search' => Yii::t('attribute', 'Wall'),
+			'user_search' => Yii::t('attribute', 'User'),
 		);
 	}
 
@@ -129,38 +123,37 @@ class OmmuZoneCountry extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.country_id',$this->country_id);
-		$criteria->compare('t.country',strtolower($this->country),true);
-		$criteria->compare('t.code',strtolower($this->code),true);
+		$criteria->compare('t.id',$this->id,true);
+		$criteria->compare('t.status',$this->status);
+		if(isset($_GET['wall'])) {
+			$criteria->compare('t.wall_id',$_GET['wall']);
+		} else {
+			$criteria->compare('t.wall_id',$this->wall_id);
+		}
+		if(isset($_GET['user'])) {
+			$criteria->compare('t.user_id',$_GET['user']);
+		} else {
+			$criteria->compare('t.user_id',$this->user_id);
+		}
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
-		if(isset($_GET['creation']))
-			$criteria->compare('t.creation_id',$_GET['creation']);
-		 else
-			$criteria->compare('t.creation_id',$this->creation_id);
-		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
-			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
-		if(isset($_GET['modified']))
-			$criteria->compare('t.modified_id',$_GET['modified']);
-		else
-			$criteria->compare('t.modified_id',$this->modified_id);
 		
 		// Custom Search
 		$criteria->with = array(
-			'creation_relation' => array(
-				'alias'=>'creation_relation',
-				'select'=>'displayname',
+			'wall' => array(
+				'alias'=>'wall',
+				'select'=>'wall_status'
 			),
-			'modified_relation' => array(
-				'alias'=>'modified_relation',
-				'select'=>'displayname',
+			'user' => array(
+				'alias'=>'user',
+				'select'=>'displayname'
 			),
 		);
-		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
-		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
+		$criteria->compare('wall.wall_status',strtolower($this->wall_search), true);
+		$criteria->compare('user.displayname',strtolower($this->user_search), true);
 
-		if(!isset($_GET['OmmuZoneCountry_sort']))
-			$criteria->order = 't.country_id DESC';
+		if(!isset($_GET['OmmuWallUser_sort']))
+			$criteria->order = 't.id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -188,13 +181,11 @@ class OmmuZoneCountry extends CActiveRecord
 				$this->defaultColumns[] = $val;
 			}
 		} else {
-			//$this->defaultColumns[] = 'country_id';
-			$this->defaultColumns[] = 'country';
-			$this->defaultColumns[] = 'code';
+			//$this->defaultColumns[] = 'id';
+			$this->defaultColumns[] = 'status';
+			$this->defaultColumns[] = 'wall_id';
+			$this->defaultColumns[] = 'user_id';
 			$this->defaultColumns[] = 'creation_date';
-			$this->defaultColumns[] = 'creation_id';
-			$this->defaultColumns[] = 'modified_date';
-			$this->defaultColumns[] = 'modified_id';
 		}
 
 		return $this->defaultColumns;
@@ -209,12 +200,18 @@ class OmmuZoneCountry extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'country';
-			$this->defaultColumns[] = 'code';
-			$this->defaultColumns[] = array(
-				'name' => 'creation_search',
-				'value' => '$data->creation_relation->displayname',
-			);
+			if(!isset($_GET['wall'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'wall_search',
+					'value' => '$data->wall->wall_status',
+				);
+			}
+			if(!isset($_GET['user'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'user_search',
+					'value' => '$data->user->displayname',
+				);
+			}
 			$this->defaultColumns[] = array(
 				'name' => 'creation_date',
 				'value' => 'Utility::dateFormat($data->creation_date)',
@@ -241,6 +238,18 @@ class OmmuZoneCountry extends CActiveRecord
 					),
 				), true),
 			);
+			$this->defaultColumns[] = array(
+				'name' => 'status',
+				'value' => '$data->status == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\')',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
+			);
 		}
 		parent::afterConstruct();
 	}
@@ -262,33 +271,4 @@ class OmmuZoneCountry extends CActiveRecord
 		}
 	}
 
-	/**
-	 * Get country
-	 */
-	public static function getCountry() {
-		$model = self::model()->findAll();
-
-		$items = array();
-		if($model != null) {
-			foreach($model as $key => $val) {
-				$items[$val->country_id] = $val->country;
-			}
-			return $items;
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	 * before validate attributes
-	 */
-	protected function beforeValidate() {
-		if(parent::beforeValidate()) {		
-			if($this->isNewRecord)
-				$this->creation_id = Yii::app()->user->id;	
-			else
-				$this->modified_id = Yii::app()->user->id;
-		}
-		return true;
-	}
 }

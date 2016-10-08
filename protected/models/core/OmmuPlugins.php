@@ -1,6 +1,6 @@
 <?php
 /**
- * OmmuThemes
+ * OmmuPlugins
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
@@ -19,22 +19,28 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_themes".
+ * This is the model class for table "ommu_core_plugins".
  *
- * The followings are the available columns in table 'ommu_core_themes':
- * @property integer $theme_id
- * @property string $group_page
- * @property integer $default_theme
+ * The followings are the available columns in table 'ommu_core_plugins':
+ * @property integer $plugin_id
+ * @property integer $defaults
+ * @property integer $install
+ * @property integer $actived
+ * @property integer $search
+ * @property integer $orders
  * @property string $folder
- * @property string $layout
  * @property string $name
- * @property string $thumbnail
+ * @property string $desc
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
+ *
+ * The followings are the available model relations:
+ * @property OmmuCoreComment[] $ommuCoreComments
+ * @property OmmuCorePluginPhrase[] $ommuCorePluginPhrases
  */
-class OmmuThemes extends CActiveRecord
+class OmmuPlugins extends CActiveRecord
 {
 	public $defaultColumns = array();
 	
@@ -45,7 +51,7 @@ class OmmuThemes extends CActiveRecord
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @param string $className active record class name.
-	 * @return OmmuThemes the static model class
+	 * @return OmmuPlugins the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -57,7 +63,7 @@ class OmmuThemes extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_themes';
+		return 'ommu_core_plugins';
 	}
 
 	/**
@@ -68,13 +74,16 @@ class OmmuThemes extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('group_page, folder, layout, name', 'required'),
-			array('default_theme', 'numerical', 'integerOnly'=>true),
-			array('group_page', 'length', 'max'=>6),
-			array('folder, layout, name, thumbnail', 'length', 'max'=>32),
+			array('folder', 'required'),
+			array('name, desc', 'required', 'on'=>'adminadd'),
+			array('defaults, install, actived, search, orders', 'numerical', 'integerOnly'=>true),
+			array('folder', 'length', 'max'=>32),
+			array('name', 'length', 'max'=>128),
+			array('desc', 'length', 'max'=>255),
+			array('creation_date', 'safe'),
 			// The following rule is used by search().
 			// Please remove those attributes that should not be searched.
-			array('theme_id, group_page, default_theme, folder, layout, name, thumbnail, creation_date, creation_id, modified_date, modified_id,
+			array('plugin_id, defaults, install, actived, search, orders, folder, name, desc, creation_date, creation_id, modified_date, modified_id,
 				creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
@@ -98,13 +107,15 @@ class OmmuThemes extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'theme_id' => Yii::t('attribute', 'Theme'),
-			'group_page' => Yii::t('attribute', 'Group Page'),
-			'default_theme' => Yii::t('attribute', 'Default Theme'),
+			'plugin_id' => Yii::t('attribute', 'Plugin'),
+			'defaults' => Yii::t('attribute', 'Defaults'),
+			'install' => Yii::t('attribute', 'Install'),
+			'actived' => Yii::t('attribute', 'Actived'),
+			'search' => Yii::t('attribute', 'Search'),
+			'orders' => Yii::t('attribute', 'Orders'),
 			'folder' => Yii::t('attribute', 'Folder'),
-			'layout' => Yii::t('attribute', 'Layout'),
 			'name' => Yii::t('attribute', 'Name'),
-			'thumbnail' => Yii::t('attribute', 'Thumbnail'),
+			'desc' => Yii::t('attribute', 'Desc'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
@@ -125,13 +136,20 @@ class OmmuThemes extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.theme_id',$this->theme_id);
-		$criteria->compare('t.group_page',$this->group_page,true);
-		$criteria->compare('t.default_theme',$this->default_theme);
+		$criteria->compare('t.plugin_id',$this->plugin_id);
+		$criteria->compare('t.defaults',$this->defaults);
+		$criteria->compare('t.install',$this->install);
+		if(isset($_GET['type']) && $_GET['type'] == 'all') {
+			$criteria->compare('t.actived',$this->actived);
+		} else {
+			$criteria->addInCondition('t.actived',array(1,2));
+			$criteria->compare('t.actived',$this->actived);
+		}
+		$criteria->compare('t.search',$this->search);
+		$criteria->compare('t.orders',$this->orders);
 		$criteria->compare('t.folder',strtolower($this->folder),true);
-		$criteria->compare('t.layout',strtolower($this->layout),true);
 		$criteria->compare('t.name',strtolower($this->name),true);
-		$criteria->compare('t.thumbnail',$this->thumbnail,true);
+		$criteria->compare('t.desc',strtolower($this->desc),true);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
 		$criteria->compare('t.creation_id',$this->creation_id);
@@ -153,8 +171,8 @@ class OmmuThemes extends CActiveRecord
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
 		
-		if(!isset($_GET['OmmuThemes_sort']))
-			$criteria->order = 't.theme_id DESC';
+		if(!isset($_GET['OmmuPlugins_sort']))
+			$criteria->order = 't.plugin_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -182,13 +200,15 @@ class OmmuThemes extends CActiveRecord
 				$this->defaultColumns[] = $val;
 			}
 		}else {
-			//$this->defaultColumns[] = 'theme_id';
-			$this->defaultColumns[] = 'group_page';
-			$this->defaultColumns[] = 'default_theme';
+			//$this->defaultColumns[] = 'plugin_id';
+			$this->defaultColumns[] = 'defaults';
+			$this->defaultColumns[] = 'install';
+			$this->defaultColumns[] = 'actived';
+			$this->defaultColumns[] = 'search';
+			$this->defaultColumns[] = 'orders';
 			$this->defaultColumns[] = 'folder';
-			$this->defaultColumns[] = 'layout';
 			$this->defaultColumns[] = 'name';
-			$this->defaultColumns[] = 'thumbnail';
+			$this->defaultColumns[] = 'desc';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -207,21 +227,14 @@ class OmmuThemes extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'name';
 			$this->defaultColumns[] = 'folder';
 			$this->defaultColumns[] = array(
-				'name' => 'group_page',
-				'value' => '$data->group_page',
-				'htmlOptions' => array(
-					//'class' => 'center',
-				),
-				'filter'=>array(
-					'admin'=>Yii::t('phrase', 'Admin'),
-					'public'=>Yii::t('phrase', 'Public'),
-					'underconstruction'=>Yii::t('phrase', 'Underconstruction'),
-					'maintenance'=>Yii::t('phrase', 'Maintenance'),
-				),
-				'type' => 'raw',
+				'name' => 'name',
+				'value' => '$data->name == "" ? "-" : $data->name',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'desc',
+				'value' => '$data->desc == "" ? "-" : $data->desc',
 			);
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
@@ -234,8 +247,8 @@ class OmmuThemes extends CActiveRecord
 					'class' => 'center',
 				),
 				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this,
-					'attribute'=>'creation_date',
+					'model'=>$this, 
+					'attribute'=>'creation_date', 
 					'language' => 'ja',
 					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
 					//'mode'=>'datetime',
@@ -254,8 +267,44 @@ class OmmuThemes extends CActiveRecord
 				), true),
 			);
 			$this->defaultColumns[] = array(
-				'name' => 'default_theme',
-				'value' => '$data->default_theme == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Utility::getPublish(Yii::app()->controller->createUrl("default",array("id"=>$data->theme_id)), $data->default_theme, 6)',
+				'name' => 'install',
+				'value' => '$data->install == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Utility::getPublish(Yii::app()->controller->createUrl("install",array("id"=>$data->plugin_id)), $data->install, 10)',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'actived',
+				'value' => '$data->install == 1 ? ($data->actived == 2 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Utility::getPublish(Yii::app()->controller->createUrl("active",array("id"=>$data->plugin_id)), $data->actived, 2)) : "-"',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'search',
+				'value' => '$data->search == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/unpublish.png\')',
+				'htmlOptions' => array(
+					'class' => 'center',
+				),
+				'filter'=>array(
+					1=>Yii::t('phrase', 'Yes'),
+					0=>Yii::t('phrase', 'No'),
+				),
+				'type' => 'raw',
+			);
+			$this->defaultColumns[] = array(
+				'name' => 'defaults',
+				'value' => '$data->install == 1 ? ($data->defaults == 1 ? Chtml::image(Yii::app()->theme->baseUrl.\'/images/icons/publish.png\') : Utility::getPublish(Yii::app()->controller->createUrl("default",array("id"=>$data->plugin_id)), $data->defaults, 6)) : "-"',
 				'htmlOptions' => array(
 					'class' => 'center',
 				),
@@ -270,14 +319,68 @@ class OmmuThemes extends CActiveRecord
 	}
 
 	/**
+	 * User get information
+	 */
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
+		}
+	}
+
+	// Get plugin list
+	public static function getPlugin($actived=null, $keypath=null, $type=null)
+	{
+		$criteria=new CDbCriteria;
+		if($actived != null)
+			$criteria->compare('t.actived', $actived);
+		$criteria->addNotInCondition('t.orders', array(0));
+		if($actived == null || ($actived != null && $actived == 0))
+			$criteria->order = 'folder ASC';
+		else
+			$criteria->order = 'orders ASC';
+		
+		$model = self::model()->findAll($criteria);
+		
+		if($type == null) {
+			$items = array();
+			if($model != null) {
+				foreach($model as $key => $val) {
+					if($keypath == null)
+						$items[$val->folder] = $val->name;
+					else
+						$items[$val->plugin_id] = $val->name;
+				}
+				return $items;
+				
+			} else
+				return false;
+			
+		} else
+			return $model;		
+	}
+
+	/**
 	 * before validate attributes
 	 */
 	protected function beforeValidate() {
-		if(parent::beforeValidate()) {	
-			if($this->isNewRecord)
-				$this->creation_id = Yii::app()->user->id;
-			else
-				$this->modified_id = Yii::app()->user->id;
+		if(parent::beforeValidate()) {		
+			if($this->isNewRecord) {
+				if($this->actived == 1)
+					$this->orders = count(self::getPlugin(1, null, 'data')) + 1;
+				else
+					$this->orders = 0;
+				
+				$this->creation_id = Yii::app()->user->id;	
+			} else
+				$this->modified_id = Yii::app()->user->id;	
 		}
 		return true;
 	}
@@ -288,15 +391,20 @@ class OmmuThemes extends CActiveRecord
 	protected function beforeSave() {
 		if(parent::beforeSave()) {
 			if(!$this->isNewRecord) {
+				if($this->actived == 0) {
+					$conn = Yii::app()->db;
+					$sql = "UPDATE ommu_core_plugins SET orders = (orders - 1) WHERE orders > {$this->orders}";
+					$conn->createCommand($sql)->execute();
+					$this->orders = 0;
+				} else if($this->actived == 1)
+					$this->orders = count(self::getPlugin(1, null, 'data')) + 1;
+
 				// set to default modules
-				if($this->default_theme == 1) {
+				if($this->defaults == 1) {
 					self::model()->updateAll(array(
-						'default_theme' => 0,	
-					), array(
-						'condition'=> 'group_page = :group',
-						'params'=>array(':group'=>$this->group_page),
+						'defaults' => 0,	
 					));
-					$this->default_theme = 1;
+					$this->defaults = 1;
 				}
 			}
 		}

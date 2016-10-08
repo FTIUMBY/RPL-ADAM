@@ -1,10 +1,10 @@
 <?php
 /**
- * OmmuTags
+ * OmmuZoneDistricts
  * version: 1.1.0
  *
  * @author Putra Sudaryanto <putra@sudaryanto.id>
- * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @copyright Copyright (c) 2015 Ommu Platform (ommu.co)
  * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
@@ -19,30 +19,34 @@
  *
  * --------------------------------------------------------------------------------------
  *
- * This is the model class for table "ommu_core_tags".
+ * This is the model class for table "ommu_core_zone_districts".
  *
- * The followings are the available columns in table 'ommu_core_tags':
- * @property string $tag_id
+ * The followings are the available columns in table 'ommu_core_zone_districts':
+ * @property string $district_id
  * @property integer $publish
- * @property string $body
+ * @property string $city_id
+ * @property string $district_name
+ * @property string $mfdonline
+ * @property integer $checked
  * @property string $creation_date
  * @property string $creation_id
  * @property string $modified_date
  * @property string $modified_id
  */
-class OmmuTags extends CActiveRecord
+class OmmuZoneDistricts extends CActiveRecord
 {
 	public $defaultColumns = array();
-	public $body;
 	
 	// Variable Search
+	public $city_search;
 	public $creation_search;
 	public $modified_search;
 
 	/**
 	 * Returns the static model of the specified AR class.
+	 * Please note that you should have this exact method in all your CActiveRecord descendants!
 	 * @param string $className active record class name.
-	 * @return OmmuTags the static model class
+	 * @return OmmuZoneDistricts the static model class
 	 */
 	public static function model($className=__CLASS__)
 	{
@@ -54,7 +58,7 @@ class OmmuTags extends CActiveRecord
 	 */
 	public function tableName()
 	{
-		return 'ommu_core_tags';
+		return 'ommu_core_zone_districts';
 	}
 
 	/**
@@ -65,14 +69,16 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('body', 'required'),
-			array('publish', 'numerical', 'integerOnly'=>true),
-			array('body', 'length', 'max'=>64),
-			array('creation_date', 'safe'),
+			array('district_name, mfdonline', 'required'),
+			array('publish, checked', 'numerical', 'integerOnly'=>true),
+			array('city_id, creation_id, modified_id', 'length', 'max'=>11),
+			array('district_name', 'length', 'max'=>64),
+			array('mfdonline', 'length', 'max'=>7),
+			array('creation_id, modified_id', 'safe'),
 			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('tag_id, publish, body, creation_date, creation_id, modified_date, modified_id,
-				creation_search, modified_search', 'safe', 'on'=>'search'),
+			// @todo Please remove those attributes that should not be searched.
+			array('district_id, publish, city_id, district_name, mfdonline, checked, creation_date, creation_id, modified_date, modified_id,
+				city_search, creation_search, modified_search', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -84,6 +90,7 @@ class OmmuTags extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'city_relation' => array(self::BELONGS_TO, 'OmmuZoneCity', 'city_id'),
 			'creation_relation' => array(self::BELONGS_TO, 'Users', 'creation_id'),
 			'modified_relation' => array(self::BELONGS_TO, 'Users', 'modified_id'),
 		);
@@ -95,30 +102,41 @@ class OmmuTags extends CActiveRecord
 	public function attributeLabels()
 	{
 		return array(
-			'tag_id' => Yii::t('attribute', 'Tag'),
+			'district_id' => Yii::t('attribute', 'District'),
 			'publish' => Yii::t('attribute', 'Publish'),
-			'body' => Yii::t('attribute', 'Body'),
+			'city_id' => Yii::t('attribute', 'City'),
+			'district_name' => Yii::t('attribute', 'District Name'),
+			'mfdonline' => Yii::t('attribute', 'Mfdonline'),
+			'checked' => Yii::t('attribute', 'Checked'),
 			'creation_date' => Yii::t('attribute', 'Creation Date'),
 			'creation_id' => Yii::t('attribute', 'Creation'),
 			'modified_date' => Yii::t('attribute', 'Modified Date'),
 			'modified_id' => Yii::t('attribute', 'Modified'),
+			'city_search' => Yii::t('attribute', 'City'),
 			'creation_search' => Yii::t('attribute', 'Creation'),
 			'modified_search' => Yii::t('attribute', 'Modified'),
 		);
 	}
-	
+
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
+	 *
+	 * Typical usecase:
+	 * - Initialize the model fields with values from filter form.
+	 * - Execute this method to get CActiveDataProvider instance which will filter
+	 * models according to data in model fields.
+	 * - Pass data provider to CGridView, CListView or any similar widget.
+	 *
+	 * @return CActiveDataProvider the data provider that can return the models
+	 * based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// Warning: Please modify the following code to remove attributes that
-		// should not be searched.
+		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('t.tag_id',$this->tag_id,true);
+		$criteria->compare('t.district_id',$this->district_id,true);
 		if(isset($_GET['type']) && $_GET['type'] == 'publish') {
 			$criteria->compare('t.publish',1);
 		} elseif(isset($_GET['type']) && $_GET['type'] == 'unpublish') {
@@ -129,30 +147,47 @@ class OmmuTags extends CActiveRecord
 			$criteria->addInCondition('t.publish',array(0,1));
 			$criteria->compare('t.publish',$this->publish);
 		}
-		$criteria->compare('t.body',strtolower($this->body),true);
+		if(isset($_GET['city']))
+			$criteria->compare('t.city_id',$_GET['city']);
+		else
+			$criteria->compare('t.city_id',$this->city_id);
+		$criteria->compare('t.district_name',strtolower($this->district_name),true);
+		$criteria->compare('t.mfdonline',strtolower($this->mfdonline),true);
+		$criteria->compare('t.checked',$this->checked);
 		if($this->creation_date != null && !in_array($this->creation_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.creation_date)',date('Y-m-d', strtotime($this->creation_date)));
-		$criteria->compare('t.creation_id',$this->creation_id);
+		if(isset($_GET['creation']))
+			$criteria->compare('t.creation_id',$_GET['creation']);
+		else
+			$criteria->compare('t.creation_id',$this->creation_id);
 		if($this->modified_date != null && !in_array($this->modified_date, array('0000-00-00 00:00:00', '0000-00-00')))
 			$criteria->compare('date(t.modified_date)',date('Y-m-d', strtotime($this->modified_date)));
-		$criteria->compare('t.modified_id',$this->modified_id);
+		if(isset($_GET['modified']))
+			$criteria->compare('t.modified_id',$_GET['modified']);
+		else
+			$criteria->compare('t.modified_id',$this->modified_id);
 		
 		// Custom Search
 		$criteria->with = array(
+			'city_relation' => array(
+				'alias'=>'city_relation',
+				'select'=>'city',
+			),
 			'creation_relation' => array(
 				'alias'=>'creation_relation',
-				'select'=>'displayname'
+				'select'=>'displayname',
 			),
 			'modified_relation' => array(
 				'alias'=>'modified_relation',
-				'select'=>'displayname'
+				'select'=>'displayname',
 			),
 		);
+		$criteria->compare('city_relation.city',strtolower($this->city_search), true);
 		$criteria->compare('creation_relation.displayname',strtolower($this->creation_search), true);
 		$criteria->compare('modified_relation.displayname',strtolower($this->modified_search), true);
 
-		if(!isset($_GET['OmmuTags_sort']))
-			$criteria->order = 't.tag_id DESC';
+		if(!isset($_GET['OmmuZoneDistricts_sort']))
+			$criteria->order = 't.district_id DESC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -179,10 +214,13 @@ class OmmuTags extends CActiveRecord
 				*/
 				$this->defaultColumns[] = $val;
 			}
-		}else {
-			//$this->defaultColumns[] = 'tag_id';
+		} else {
+			//$this->defaultColumns[] = 'district_id';
 			$this->defaultColumns[] = 'publish';
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = 'city_id';
+			$this->defaultColumns[] = 'district_name';
+			$this->defaultColumns[] = 'mfdonline';
+			$this->defaultColumns[] = 'checked';
 			$this->defaultColumns[] = 'creation_date';
 			$this->defaultColumns[] = 'creation_id';
 			$this->defaultColumns[] = 'modified_date';
@@ -209,7 +247,12 @@ class OmmuTags extends CActiveRecord
 				'header' => 'No',
 				'value' => '$this->grid->dataProvider->pagination->currentPage*$this->grid->dataProvider->pagination->pageSize + $row+1'
 			);
-			$this->defaultColumns[] = 'body';
+			$this->defaultColumns[] = 'district_name';
+			$this->defaultColumns[] = array(
+				'name' => 'city_search',
+				'value' => '$data->city_relation->city',
+			);
+			$this->defaultColumns[] = 'mfdonline';
 			$this->defaultColumns[] = array(
 				'name' => 'creation_search',
 				'value' => '$data->creation_relation->displayname',
@@ -221,8 +264,8 @@ class OmmuTags extends CActiveRecord
 					'class' => 'center',
 				),
 				'filter' => Yii::app()->controller->widget('zii.widgets.jui.CJuiDatePicker', array(
-					'model'=>$this, 
-					'attribute'=>'creation_date', 
+					'model'=>$this,
+					'attribute'=>'creation_date',
 					'language' => 'ja',
 					'i18nScriptFile' => 'jquery.ui.datepicker-en.js',
 					//'mode'=>'datetime',
@@ -240,10 +283,11 @@ class OmmuTags extends CActiveRecord
 					),
 				), true),
 			);
+			/*
 			if(!isset($_GET['type'])) {
 				$this->defaultColumns[] = array(
 					'name' => 'publish',
-					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->tag_id)), $data->publish, 1)',
+					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("publish",array("id"=>$data->district_id)), $data->publish, 1)',
 					'htmlOptions' => array(
 						'class' => 'center',
 					),
@@ -254,8 +298,66 @@ class OmmuTags extends CActiveRecord
 					'type' => 'raw',
 				);
 			}
+			if(!isset($_GET['type'])) {
+				$this->defaultColumns[] = array(
+					'name' => 'checked',
+					'value' => 'Utility::getPublish(Yii::app()->controller->createUrl("checked",array("id"=>$data->district_id)), $data->checked, 1)',
+					'htmlOptions' => array(
+						'class' => 'center',
+					),
+					'filter'=>array(
+						1=>Yii::t('phrase', 'Yes'),
+						0=>Yii::t('phrase', 'No'),
+					),
+					'type' => 'raw',
+				);
+			}*/
 		}
 		parent::afterConstruct();
+	}
+
+	/**
+	 * User get information
+	 */
+	public static function getInfo($id, $column=null)
+	{
+		if($column != null) {
+			$model = self::model()->findByPk($id,array(
+				'select' => $column
+			));
+			return $model->$column;
+			
+		} else {
+			$model = self::model()->findByPk($id);
+			return $model;			
+		}
+	}
+
+	/**
+	 * Get city
+	 */
+	public static function getDistrict($city=null) {
+		if($city == null || ($city != null && $city == '')) {
+			$model = self::model()->findAll();
+		} else {
+			$model = self::model()->findAll(array(
+				//'select' => 'publish, name',
+				'condition' => 'city_id = :city',
+				'params' => array(
+					':city' => $city,
+				),
+			));
+		}
+
+		$items = array();
+		if($model != null) {
+			foreach($model as $key => $val) {
+				$items[$val->district_id] = $val->district_name;
+			}
+			return $items;
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -267,18 +369,8 @@ class OmmuTags extends CActiveRecord
 				$this->creation_id = Yii::app()->user->id;	
 			else
 				$this->modified_id = Yii::app()->user->id;
-
 		}
 		return true;
 	}
-	
-	/**
-	 * before save attributes
-	 */
-	protected function beforeSave() {
-		if(parent::beforeSave()) {
-			$this->body = strtolower(trim($this->body));
-		}
-		return true;	
-	}
+
 }
