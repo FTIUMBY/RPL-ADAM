@@ -1,12 +1,14 @@
 <?php
 /**
+ * Ommu Themes (ommu-themes)
  * @var $this ThemeController
  * @var $model OmmuThemes
  * @var $form CActiveForm
+ * version: 1.1.0
  *
- * @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
- * @copyright Copyright (c) 2014 Ommu Platform (ommu.co)
- * @link http://company.ommu.co
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
  */
@@ -29,9 +31,9 @@
 			<?php echo $form->labelEx($model,'group_page'); ?>
 			<div class="desc">
 				<?php echo $form->dropDownList($model, 'group_page', array(
-					'public' => 'Public',
-					'admin' => 'Administrator',
-					'underconstruction' => 'Undercontruction',
+					'public' => Yii::t('phrase', 'Public'),
+					'admin' => Yii::t('phrase', 'Administrator'),
+					'underconstruction' => Yii::t('phrase', 'Undercontruction'),
 				)); ?>
 				<?php echo $form->error($model,'group_page'); ?>
 			</div>
@@ -73,8 +75,8 @@
 	</fieldset>
 </div>
 <div class="dialog-submit">
-	<?php echo CHtml::submitButton($model->isNewRecord ? 'Create' : 'Save', array('onclick' => 'setEnableSave()')); ?>
-	<?php echo CHtml::button('Close', array('id'=>'closed')); ?>
+	<?php echo CHtml::submitButton($model->isNewRecord ? Yii::t('phrase', 'Create') : Yii::t('phrase', 'Save'), array('onclick' => 'setEnableSave()')); ?>
+	<?php echo CHtml::button(Yii::t('phrase', 'Close'), array('id'=>'closed')); ?>
 </div>
 <?php $this->endWidget(); ?>
 

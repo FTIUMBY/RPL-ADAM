@@ -1,35 +1,37 @@
 <?php
 /**
+ * Ommu Tags (ommu-tags)
  * @var $this GlobaltagController
  * @var $model OmmuTags
+ * version: 1.1.0
  *
- * @author Putra Sudaryanto <putra.sudaryanto@gmail.com>
- * @copyright Copyright (c) 2014 Ommu Platform (ommu.co)
- * @link http://company.ommu.co
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2012 Ommu Platform (ommu.co)
+ * @link https://github.com/oMMu/Ommu-Core
  * @contact (+62)856-299-4114
  *
  */
- 
+
 	$this->breadcrumbs=array(
 		'Ommu Tags'=>array('manage'),
 		'Manage',
 	);
 	$this->menu=array(
 		array(
-			'label' => 'Filter', 
+			'label' => Yii::t('phrase', 'Filter'), 
 			'url' => array('javascript:void(0);'),
 			'itemOptions' => array('class' => 'search-button'),
 			'linkOptions' => array(
-				'title' => 'Filter',
+				'title' => Yii::t('phrase', 'Filter'),
 				'off_address' => '',
 			),
 		),
 		array(
-			'label' => 'Grid Options', 
+			'label' => Yii::t('phrase', 'Grid Options'), 
 			'url' => array('javascript:void(0);'),
 			'itemOptions' => array('class' => 'grid-button'),
 			'linkOptions' => array(
-				'title' => 'Grid Options',
+				'title' => Yii::t('phrase', 'Grid Options'),
 				'off_address' => '',
 			),
 		),
@@ -70,7 +72,7 @@
 		<?php 
 			$columnData   = $columns;
 			array_push($columnData, array(
-				'header' => 'Actions',
+				'header' => Yii::t('phrase', 'Options'),
 				'class'=>'CButtonColumn',
 				'buttons' => array(
 					'view' => array(
