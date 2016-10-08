@@ -110,6 +110,16 @@ function dialogClosedPush() {
 
 //dialog close action
 function dialogActionClosed() {
+	$('.dialog .dialog-box a.closed').click(function(){
+		dialogClosed();
+		dialogClosedPush();
+	});
+	$('.notifier .dialog-box input#closed').click(function(){
+		notifierClosed();
+		if($('div[name="dialog-wrapper"]').html() == '') {
+			dialogClosedPush();
+		}
+	});
 	/* $("div.dialog .dialog-box .content").mouseup(function() {
 		return false
 	});
@@ -120,17 +130,6 @@ function dialogActionClosed() {
 			dialogClosedPush();
 		}
 	}); */
-
-	$('.dialog .dialog-box a.closed, .dialog .dialog-box input#closed').live('click',function(){
-		dialogClosed();
-		dialogClosedPush();
-	});
-	$('.notifier .dialog-box input#closed').live('click',function(){
-		notifierClosed();
-		if($('div[name="dialog-wrapper"]').html() == '') {
-			dialogClosedPush();
-		}
-	});
 }
 
 /**
@@ -164,7 +163,7 @@ function ajaxFunction() {
 	});
 
 	// Default url push
-	$('a:not("[off_address]")').live('click',function(){
+	$('a:not("[off_address]")').click(function(){
 		var url = $(this).attr('href');
 		if (typeof(url) != 'undefined') {
 			if(url != 'javascript:void(0);') {
@@ -179,7 +178,7 @@ function ajaxFunction() {
 	*/
 	
 	// Custom show dialog
-	$('a.link-dialog').live('click', function() {
+	$('a.link-dialog').click(function() {
 		var id = $(this).attr('id');
 		var width = $(this).attr('rel');
 		var url = $(this).attr('href');
@@ -209,22 +208,24 @@ $(document).ready(function() {
 	 *	0 [show message]
 	 *	1 [update grid-view]
 	 *	2 [replace spesific and galery upload]
+	 *	3 [append, prepand]
 	 *	5 [replace content or show dialog]
 	 *
-	 *	//3 [hide media-render]
 	 *	4 [hide parent div]
 	 *	//6 [replace header]
 	 *	7 [spesific replace]
 	 *
 	 *	id [2,7] => attribute id (html)
 	 *	msg [0,1,7] => message
-	 *	get [0,2,3,5,6,7] => url
-	 *	value [0] => 0,1
+	 *	get [0,2,3,5] => url
+	 *	value [0,3] => 0,1 (3"1=append,0=prepand")
+	 *	data [3] => [html sintag]
+	 *	idclass [3] => [selector]
 	 *
 	 */ 
 
 	// Dialog and General Function Form
-	$('div[name="post-on"] form, .dialog .dialog-box form:not("[on_post]"), .notifier .dialog-box form:not("[on_post]")').live('submit', function(event) {
+	$('div[name="post-on"] form, .dialog .dialog-box form:not("[on_post]"), .notifier .dialog-box form:not("[on_post]")').submit(function(event) {
 		$(this).find('input[type="submit"]').addClass('active');
 		var attrSave = '?&enablesave=' + isEnableSave;
 		//var attrSave = '/enablesave/' + isEnableSave;
@@ -307,7 +308,15 @@ $(document).ready(function() {
 									});
 
 								} else if(response.type == 3) {
-									//js condition
+									if (typeof(response.get) != 'undefined') {
+										
+									} else {
+										if (typeof(response.value) == 'undefined' || (typeof(response.value) != 'undefined' && response.value == 1)) {
+											$(response.idclass).append(response.data);
+										} else {
+											$(response.idclass).prepend(response.data);
+										}
+									}
 
 								} else if(response.type == 4) {
 									notifierClosed();
@@ -445,19 +454,19 @@ if(dialogGroundUrl != '') {
 			if(data.redirect != null) {
 				location.href = data.redirect;
 				
-			} else {				
+			} else {
 				//render condition
 				if(data.page == 1)
 					var content = data.render.content;
 				else 
 					var content = data.render;
-					
+
 				if(data.dialog == 0) {
 					//push title and last url
 					lastTitle = data.title;
 					lastDescription = data.description;
 					lastKeywords = data.keywords;
-					lastUrl = data.address;				
+					lastUrl = data.address;
 					$('div.body .sidebar .menu').html(data.header);
 					$('div.body div.wrapper').html(content);
 
@@ -487,9 +496,9 @@ if(dialogGroundUrl != '') {
 					$('style[type="text/css"]').html('');
 					$('style[type="text/css"]').html(data.script.cssFiles);
 					$.when(
-						//$.each(data.script.scriptFiles, function(key, val) {
-						//	$.getScript(val);
-						//})
+						$.each(data.script.scriptFiles, function(key, val) {
+							$.getScript(val);
+						})
 					).then(function() {
 					});
 				}
@@ -558,9 +567,9 @@ function replaceContent(data, type) {
 			$('style[type="text/css"]').html('');
 			$('style[type="text/css"]').html(data.script.cssFiles);
 			$.when(
-				//$.each(data.script.scriptFiles, function(key, val) {
-				//	$.getScript(val);
-				//})
+				$.each(data.script.scriptFiles, function(key, val) {
+					$.getScript(val);
+				})
 			).then(function() {
 			});
 		}
@@ -581,7 +590,7 @@ utilityFunction();
  * 
  **/
 function reinstallDatePicker() {
-	$('input[on_datepicker]').live('focus',function(){
-		$(this).datepicker(jQuery.extend({showMonthAfterYear:false},jQuery.datepicker.regional['ja'],[]));
+	$('input[on_datepicker]').focus(function(){
+		$(this).datepicker(jQuery.extend({showMonthAfterYear:false},jQuery.datepicker.regional['ja'],{'showOn':'focus','dateFormat':'dd-mm-yy','showOtherMonths':true,'selectOtherMonths':true,'changeMonth':true,'changeYear':true,'showButtonPanel':true}));
 	});
 }

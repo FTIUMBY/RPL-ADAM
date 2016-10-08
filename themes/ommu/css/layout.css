@@ -1,15 +1,19 @@
-/* layout.css *
-* Copyright (c) 2012, Nirwasita Studio. All rights reserved.
-* version: 0.1.0
-*
-*	CSS Reset
-*	Header
-*	Body
-*	Dialog
-*	Footer
-*	Responsive
-*
-*/ 
+/** 
+ * layout.css
+ * @author Putra Sudaryanto <putra@sudaryanto.id>
+ * @copyright Copyright (c) 2014 Ommu Platform (ommu.co)
+ * version: 0.1.0
+ * @link http://company.ommu.co
+ * @contect (+62)856-299-4114
+ *
+ *	CSS Reset : reset default browser style
+ *	Loading and Dialog
+ *	Header
+ *	Body
+ *	Footer
+ *	Responsive
+ *
+ */
 
 /* =CSS Reset : reset default browser style
 -------------------------------------------------------------*/
@@ -32,8 +36,7 @@ div[class^="open-dialog"] {
 
 /* Dialog */
 .dialog,
-.notifier,
-.board {
+.notifier {
 	position: fixed;
 	top:0;
 	right:0;
@@ -45,7 +48,7 @@ div[class^="open-dialog"] {
 	cursor: -webkit-zoom-out;
 }
 .dialog {
-	z-index: 980;
+	z-index: 800;
 	background: rgba(0,0,0,0.6);
 	-webkit-overflow-scrolling: touch;
 	overflow-y: scroll;
@@ -57,8 +60,7 @@ div[class^="open-dialog"] {
 .notifier .fixed,
 .notifier .fixed .valign,
 .notifier .dialog-box,
-.notifier .dialog-box .content,
-.board .fixed {
+.notifier .dialog-box .content {
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -66,8 +68,7 @@ div[class^="open-dialog"] {
 .dialog .fixed,
 .dialog .fixed .valign,
 .notifier .fixed,
-.notifier .fixed .valign,
-.board .fixed {
+.notifier .fixed .valign {
 	width: 100%;
 	height: 100%;
 }
@@ -131,52 +132,9 @@ div[class^="open-dialog"] {
 .dialog .dialog-box .content[id='950px'],
 .notifier .dialog-box .content[id='950px'] {width: 950px;}
 
-/* Board */
-.board {
-	background: rgba(0,0,0,0.6);
-	z-index: 700;
-}
-.board .fixed {
-	padding: 30px 30px 30px 30px;
-}
-.board .fixed #board,
-.board .fixed #board .sub-board {
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;	
-	height: 100%;
-}
-.board .fixed #board {
-	display: table;
-	background: white;
-	width: 100%;
-}
-.board .fixed #board .sub-board {
-	display: table-cell;
-	width: 25%;
-	-webkit-overflow-scrolling: touch;
-	overflow-y: scroll;
-	padding: 10px 10px 10px 10px;
-}
-.board .fixed #board .sub-board[ref="1"] {
-	background: #f0f0f0;
-	border-right: 2px solid #d0d0d0;
-}
-.board .fixed #board .sub-board[ref="2"] {
-	background: #e0e0e0;
-	border-right: 2px solid #c0c0c0;
-}
-.board .fixed #board .sub-board[ref="3"] {
-	background: #d0d0d0;	
-	border-right: 2px solid #b0b0b0;
-}
-.board .fixed #board .sub-board[ref="4"] {
-	background: #c0c0c0;	
-}
-
 /* Notifier */
 .notifier {
-	z-index: 990;
+	z-index: 900;
 	background: rgba(0,0,0,0.6);
 	-webkit-overflow-scrolling: touch;
 	overflow-y: scroll;
@@ -230,14 +188,6 @@ div[class^="open-dialog"] {
 }
 .notifier .dialog-box .dialog-submit input:last-child {
 	margin: 0 0 0 0;
-}
-
-/* Custom */
-.dialog .dialog-box .content {
-	padding: 0 0 0 0;
-}
-.dialog .dialog-box .dialog-content {
-	padding: 15px 15px 15px 15px;
 }
 
 /* =Login
@@ -700,8 +650,9 @@ div.body .content div[id^="partial"]:last-child {
 	float: right;
 }
 .body div.content .contentmenu ul li {
+	position: relative;
 	float: left;
-	margin: 0 0 15px 0;
+	padding: 0 0 15px 0;
 }
 .body div.content .contentmenu ul li a {
 	display: block;
@@ -721,6 +672,37 @@ div.body .content div[id^="partial"]:last-child {
 .body div.content .contentmenu ul li a span {
 	display: inline-block;
 	padding: 0 6px 0 0;
+}
+.body div.content .contentmenu ul ul {
+	-webkit-box-shadow: 0px 0px 2px 0px #acaeaf;
+	-moz-box-shadow: 0px 0px 2px 0px #acaeaf;
+	box-shadow: 0px 0px 2px 0px #acaeaf;
+	position: absolute;
+	top: 80%;
+	left: 0;
+	display: none;
+	width: 200px;
+	background: #f9f9f9;
+}
+.body div.content .contentmenu ul li:hover ul {
+	display: block;
+}
+.body div.content .contentmenu ul ul li {
+	float: none;
+	margin: 0 0 0 0;
+	padding: 0 0 0 0;
+}
+.body div.content .contentmenu ul ul li a,
+.body div.content .contentmenu ul ul li:first-child a,
+.body div.content .contentmenu ul.left ul li:first-child a {
+	padding: 8px 12px;
+	border-left: none;
+}
+.body div.content .contentmenu ul ul li a {
+	border-bottom: 1px dotted #ccc;
+}
+.body div.content .contentmenu ul ul li:last-child a {
+	border-bottom: none;
 }
 
 /* Search and Grid Options Form */
@@ -763,6 +745,13 @@ div.body .content div[id^="partial"]:last-child {
 }
 .body div.content .boxed:last-child {}
 
+.body .box {
+	-webkit-box-shadow: 0px 0px 2px 0px #acaeaf;
+	-moz-box-shadow: 0px 0px 2px 0px #acaeaf;
+	box-shadow: 0px 0px 2px 0px #acaeaf;
+	background: #fff;
+}
+
 /* =List Data
 -------------------------------------------------------------- */
 /* Horizontal Data */
@@ -786,6 +775,18 @@ div.body .content div[id^="partial"]:last-child {
 .body div.horizontal-desc ul li {
 	position: relative;
 	float: left;
+}
+.body div.horizontal-data ul li {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	background: #e0e0e0;
+	border: 1px solid #e0e0e0;
+	padding: 1px;
+}
+.body div.horizontal-data ul li:hover {
+	background: orange;
+	border: 1px solid orange;	
 }
 .body div.horizontal-data ul li,
 .body div.horizontal-data[name="four"] ul li {
@@ -1100,6 +1101,9 @@ div.body .content div[id^="partial"]:last-child {
 
 /* =Detail-View
 -------------------------------------------------------------- */
+.detail-view {
+	background: #fff;
+}
 .detail-view th,
 .detail-view td {
 	padding: 8px 15px;
@@ -1114,95 +1118,6 @@ div.body .content div[id^="partial"]:last-child {
 .detail-view tr:last-child th,
 .detail-view tr:last-child td {
 	border-bottom: none;
-}
-
-/* = Kanban
--------------------------------------------------------------- */
-.dialog #kanban .dialog-header,
-.dialog #kanban .dialog-header *,
-.dialog #kanban .dialog-tab ul li a {
-	color: #fff;
-	font-size: 16px;
-	line-height: 20px;
-	font-weight: 700;
-}
-.dialog #kanban .dialog-header {
-	background: #333;
-	padding: 12px 15px;
-}
-.dialog #kanban .dialog-header h1 {
-	margin: 0 0 0 0;
-	padding: 0 0 0 0;
-}
-.dialog #kanban  .dialog-submit {
-	background: #ccc;
-	padding: 10px 12px;
-	text-align: center;
-}
-.dialog #kanban .dialog-tab ul li a {
-	display: block;
-	text-transform: uppercase;
-	text-decoration: none;
-}
-.dialog #kanban .dialog-tab {
-	background: #333;
-	padding: 0 10px;	
-}
-.dialog #kanban .dialog-tab ul {
-	display: block;
-	list-style: none;
-	padding: 0 0 0 0;
-	margin: 0 0 0 0;
-}
-.dialog #kanban .dialog-tab ul li {
-	float: left;
-	margin: 0 2px 0 0;
-}
-.dialog #kanban .dialog-tab ul li a {
-	border-bottom: 5px solid transparent;
-	padding: 12px 20px 7px 20px;
-}
-.dialog #kanban .dialog-tab ul li.selected a,
-.dialog #kanban .dialog-tab ul li:hover a {
-	border-bottom: 5px solid red;
-}
-
-.dialog #kanban #subtask-comment .list-view {
-	border-bottom: 2px solid #ccc;
-}
-.dialog #kanban #subtask-comment .list-view .sep {
-	border-bottom: 1px dotted #ddd;
-	padding: 10px 10px 10px 10px;
-}
-.dialog #kanban #subtask-comment .list-view .sep:last-child {
-	border-bottom: none;
-}
-.dialog #kanban #subtask-comment .list-view .pager {
-	border-top: 2px solid #ccc;
-	padding: 10px 10px 10px 10px;
-	text-align: center;
-}
-.dialog #kanban #subtask-comment .list-view .pager ul {
-	display: inline-block;
-	list-style: none;
-	padding: 0 0 0 0;
-	margin: 0 0 0 0;
-}
-.dialog #kanban #subtask-comment .list-view .pager ul li {
-	float: left;
-	margin: 0 8px 0 0;
-}
-.dialog #kanban #subtask-comment .list-view .pager ul li:last-child {
-	margin: 0 0 0 0;
-}
-.dialog #kanban #subtask-comment form .table {
-	display: table;
-	width: 100%;
-}
-.dialog #kanban #subtask-comment form .table textarea,
-.dialog #kanban #subtask-comment form .table input[type="submit"] {
-	display: table-cell;
-	float: none;
 }
 
 /* =Footer
@@ -1232,14 +1147,259 @@ footer .powered {
 	float: right;
 }
 
-/* =Custom
+/**
+ * Custom
+ *
+ * 
+ *
+ **/
+
+/* =Admin (Dashboard)
 -------------------------------------------------------------- */
-.body #book ul.gridmenu {
+#admin .table,
+#admin .wall,
+#admin .recent {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+#admin .table {
+	display: table;
+	width: 100%;
+}
+#admin .wall,
+#admin .recent {
+	display: table-cell;
+	vertical-align: top;
+}
+#admin .wall {
+	padding: 0 20px 0 0;
+}
+#admin .recent {
+	width: 270px;
+}
+
+/* Wall Post */
+#admin form#ommu-walls-form {
+	margin: 0 0 10px 0;
+}
+#admin #ommu-walls-form fieldset {
+	background: #f9f9f9;
+}
+#admin #ommu-walls-form fieldset div {
+	padding: 10px 10px 10px 10px;
+}
+#admin #ommu-walls-form fieldset div:last-child {
+	padding: 0 10px 10px 10px;
+}
+#admin #ommu-walls-form fieldset textarea {
+	width: 100%;
+	background: #fff;
+}
+#admin #ommu-walls-form fieldset div:last-child input,
+#admin #ommu-walls-form fieldset div:last-child div {
+	float: left;
+}
+#admin #ommu-walls-form fieldset div:last-child div {
+	padding: 8px 10px 0 15px;
+	color: #ff0000;
+}
+
+/* Wall List-View */
+#admin .wall .list-view {}
+#admin .wall .list-view .items.wall {
 	display: block;
+	width: 100%;
+	padding: 0 0 0 0;
+}
+#admin .wall .list-view .sep {
+	-webkit-box-shadow: 0px 0px 2px 0px #acaeaf;
+	-moz-box-shadow: 0px 0px 2px 0px #acaeaf;
+	box-shadow: 0px 0px 2px 0px #acaeaf;
+	border-top: 1px solid #fff;
+	background: #fff;
+	position: relative;
+	padding: 10px 10px 10px 85px;
+	min-height: 60px;
+	margin: 0 0 10px 0;
+}
+#admin .wall .list-view .sep:last-child,
+#admin .wall .sep .status .list-view .sep:last-child {
+	border-bottom: none;
+}
+#admin .wall .list-view .sep .user,
+#admin .wall .sep .status .list-view .comment-post a {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+}
+#admin .wall .list-view .sep .user a,
+#admin .wall .list-view .sep .user img,
+#admin .wall .sep .status .list-view .comment-post a,
+#admin .wall .sep .status .list-view .comment-post a img {
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	display: block;
+}
+#admin .wall .list-view .sep .status h3,
+#admin .wall .list-view .sep .status h3 *,
+#admin .wall .sep .status .list-view .sep .comment h4,
+#admin .wall .sep .status .list-view .sep .comment h4 * {
+	font-size: 12px;
+	line-height: 17px;
+}
+#admin .wall .list-view .sep .status h3,
+#admin .wall .sep .status .list-view .sep .comment h4 {
+	margin: 0 0 5px 0;
+	color: #999;
+	font-weight: 400;
+}
+#admin .wall .list-view .sep .status h3 a,
+#admin .wall .sep .status .list-view .sep .comment h4 a {
+	font-weight: 700;
+	color: #333;
+}
+#admin .wall .list-view .sep .status .meta {
+	padding: 8px 0 8px 0;
+}
+#admin .wall .list-view .sep .status .meta:last-child {
+	border-bottom: none;
+	padding: 8px 0 0 0;
+}
+
+/* Wall Paging */
+#admin .wall .list-view .paging {
+	border-top: 1px dotted #ddd;
+	padding: 10px 10px;
+}
+#admin .wall .list-view .paging a,
+#admin .wall .list-view .paging span {
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	display: block;
+	padding: 5px 10px;	
+}
+#admin .wall .list-view .paging a {
+	float: right;
+	text-decoration: none;
+}
+#admin .wall .list-view .paging:hover a {
+	background: #333;
+	color: #fff;
+}
+#admin .wall .list-view .paging a.load,
+#admin .wall .sep .status .list-view .paging a.load {
+	background: #333 url('../images/resource/loader.png') 50% 50% no-repeat;
+	color: transparent;
+}
+#admin .wall .list-view .paging span {
+	float: left;
+}
+#admin .wall .list-view .paging:hover span {
+	background: #f0f0f0;
+}
+
+/* Comment List-View */
+#admin .wall .sep .status .list-view,
+#admin .wall .sep .status .list-view * {}
+#admin .wall .sep .status .list-view {
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	border-top: none;
+	margin: 0 0 0 0;
+	display: none;
+}
+#admin .wall .sep.comment-show .status .list-view {
+	display: block;
+}
+#admin .wall .sep .status .list-view .sep,
+#admin .wall .sep .status .list-view .comment-post {
+	padding: 10px 10px 10px 50px;
+	min-height: 40px;	
+}
+#admin .wall .sep .status .list-view .sep:first-child {
+	border-top: 1px dotted #ddd;
+}
+#admin .wall .sep .status .list-view .sep .user,
+#admin .wall .sep .status .list-view .comment-post a {
+	left: 0;
+}
+
+/* Comment Paging */
+#admin .wall .sep .status .list-view .paging {
+	border-top: 1px dotted #ddd;
+	padding: 0 0 0 0;
+}
+#admin .wall .sep .status .list-view .paging a {
+	float: none;
+	padding: 8px 20px;	
+	text-align: center;
+}
+#admin .wall .sep .status .list-view .comment-post {
+	position: relative;
+	border-top: 1px dotted #ddd;
+	padding: 10px 10px 0 50px;
+}
+#admin .wall .sep .status .list-view .comment-post a {
+
+}
+
+/* Oauth Function */
+#admin .oauth {
+	margin: 0 0 20px 0;
+}
+#admin .oauth:first-child:last-child,
+#admin .oauth:last-child {
+	margin: 0 0 0 0;
+}
+#admin .oauth h3 {
+	margin: 0 0 15px 0;
+	padding: 0 0 10px 0;
+	border-bottom: 3px solid #ccc;
+	font-size: 16px;
+	line-height: 16px;
+}
+#admin .oauth div.box {
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+#admin .oauth div.box ul {
+	display: block;
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+	list-style: none;
+}
+#admin .oauth div.box ul li {
+	margin: 0 0 5px 0;
+}
+#admin .oauth div.box ul li a {
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	display: block;
+	padding: 10px 20px;
+	background: #ccc;
+	font-size: 13px;
+	line-height: 17px;
+	font-weight: 600;
+	text-decoration: none;
+}
+#admin .oauth div.box ul li a:hover {
+	background: #aaa;	
 }
 
 /* =Responsive
 -------------------------------------------------------------- */
+ul.ui-autocomplete,
+div.ui-datepicker,
+div.ui-datepicker * {
+	z-index: 999 !important;
+}
+
 /* Resolution 1280 */
 @media only screen and (max-width:1280px) {
 
@@ -1292,6 +1452,27 @@ footer .powered {
 	.notifier[name="700px"] .content {
 		width: auto !important;
 	}
+	/* Sidebar */
+	div.body .sidebar {
+		width: 90px;
+		background: none;
+	}
+	div.body .sidebar .table,
+	.body .sidebar .account a.photo,
+	.body .sidebar .menu .mainmenu,
+	.body .sidebar .account .info,
+	.body .sidebar .menu .submenu {
+		display: block;
+	}
+	.body .sidebar .account .info,
+	.body .sidebar .menu .submenu {
+		display: none;
+	}
+	/* Content */
+	div.body .content {
+		padding: 12px 12px 12px 15px;
+		background: #ebebeb;
+	}
 	/* Content Menu */
 	.body div.content .contentmenu ul.gridmenu {
 		float: left;
@@ -1340,6 +1521,10 @@ footer .powered {
 	.notifier[name="600px"] .content {
 		width: auto !important;
 	}
+	/* Header */
+	header {
+		position: static;
+	}
 	/* Body */
 	div.body {
 		display: block;
@@ -1351,9 +1536,57 @@ footer .powered {
 	div.body .sidebar,
 	div.body .content {
 		display: block;
+		width: auto;
 	}
-	div.body .sidebar {
-		display: none;
+	.body .sidebar .account,
+	.body .sidebar .menu {
+		float: left;
+		width: auto;
+	}
+	.body .sidebar .account a.photo {
+		width: auto;
+		height: auto;
+	}
+	.body .sidebar .account a.photo img {
+		width: 66px;
+		height: 66px;
+	}
+	/* Menu */
+	.body .sidebar .menu ul {}
+	.body .sidebar .menu .mainmenu {
+		width: auto;
+	}
+	.body .sidebar .menu .mainmenu ul li {
+		float: left;
+		margin: 0 1px 0 0;
+	}
+	.body .sidebar .menu .mainmenu ul li:last-child {
+		margin: 0 0 0 0;
+	}
+	.body .sidebar .menu .mainmenu ul li.active {
+		-webkit-border-bottom-left-radius: 0;
+		-moz-border-radius-bottomleft: 0;
+		border-bottom-left-radius: 0;
+		-webkit-border-top-left-radius: 5px;
+		-webkit-border-top-right-radius: 5px;
+		-moz-border-radius-topleft: 5px;
+		-moz-border-radius-topright: 5px;
+		border-top-left-radius: 5px;
+		border-top-right-radius: 5px;	
+		-webkit-box-shadow: none;
+		-moz-box-shadow: none;
+		box-shadow: none;		
+	}
+	.body .sidebar .menu .mainmenu ul li a {
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		padding: 48px 10px 10px 10px;
+		width: 85px;
+	}
+	.body .sidebar .menu .mainmenu ul li a.content,
+	.body .sidebar .menu .mainmenu ul li a.pages {
+		padding: 48px 10px 10px 10px;
 	}
 	/* Content (Wrapper) */	
 	.body div.content {
@@ -1363,8 +1596,6 @@ footer .powered {
 	footer {
 		padding: 10px 15px 10px 15px;
 	}
-	
-	
 	/* Float Content */
 	.body div.content .d-sidebar,
 	.body div.content .d-content {
@@ -1386,6 +1617,13 @@ footer .powered {
 	/* Grid-View */
 	.grid-view .summary span {
 		display: none;
+	}
+	/* Admin (Dashboard) */
+	#admin .wall {
+		padding: 0 10px 0 0;
+	}
+	#admin .recent {
+		width: 200px;
 	}
 }
 
@@ -1474,7 +1712,6 @@ footer .powered {
 		-khtml-opacity: 0.5;
 		opacity: 0.5;
 	}
-	
 	/* Footer */
 	footer {
 		padding: 10px 15px 10px 15px;
@@ -1484,8 +1721,6 @@ footer .powered {
 	footer .powered {
 		float: none;
 	}
-	
-	
 	/* Sidebar */
 	.sidebar .account {
 		padding: 0 0 0 70px;
@@ -1513,6 +1748,16 @@ footer .powered {
 	div.horizontal-data ul li,
 	div.horizontal-data[name="four"] ul li {
 		width: 33.333333333333%;
+	}
+	/* Admin (Dashboard) */
+	#admin .table,
+	#admin .wall,
+	#admin .recent {
+		display: block;
+		width: auto;
+	}
+	#admin .wall {
+		padding: 0 0 0 0;
 	}
 }
 

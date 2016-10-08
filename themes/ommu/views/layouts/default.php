@@ -23,7 +23,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 	 * = Dialog Condition
 	 */
 	if($this->dialogDetail == true) {
-		$dialogWidth = !empty($this->dialogWidth) ? $this->dialogWidth.'px' : '750px';
+		$dialogWidth = !empty($this->dialogWidth) ? $this->dialogWidth.'px' : '650px';
 	} else {
 		$dialogWidth = '';
 	}
@@ -38,14 +38,12 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 	$urlAddress = Utility::getProtocol().'://'.Yii::app()->request->serverName.Yii::app()->request->requestUri;
 
 	if(Yii::app()->request->isAjaxRequest && !isset($_GET['ajax'])) {
-		/*
-		if((Yii::app()->session['theme_active'] != Yii::app()->theme->name) && ($action != 'manage')) {
+		/* if(Yii::app()->session['theme_active'] != Yii::app()->theme->name) {
 			$return = array(
 				'redirect' => $urlAddress,		
 			);
-		
-		} else {
-		*/
+
+		} else { */
 			$page = $this->contentOther == true ? 1 : 0;
 			$dialog = $this->dialogDetail == true ? (empty($this->dialogWidth) ? 1 : 2) : 0;		// 0 = static, 1 = dialog, 2 = notifier
 			$header = $this->widget('AdminMenu', array(), true);
@@ -92,7 +90,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
   <meta charset="UTF-8" />
   <title><?php echo $title;?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="author" content="Ommu Platform (ommu@sudaryanto.me)" />
+  <meta name="author" content="Ommu Platform (support@ommu.co)" />
   <script type="text/javascript">
 	var baseUrl = '<?php echo BASEURL;?>';
 	var lastTitle = '<?php echo $title;?>';
@@ -107,7 +105,9 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
  </head>
  <body <?php echo $this->dialogDetail == true ? 'style="overflow-y: hidden;"' : '';?>>
 
-<?php if(Yii::app()->user->isGuest) {?>
+<?php 
+if ($module == 'users' && $currentAction == 'admin/login') {
+//if(Yii::app()->user->isGuest) {?>
 	<?php //begin.Notifier ?>
 	<div class="login notifier" <?php echo ($this->dialogDetail == true && !empty($this->dialogWidth)) ? 'name="'.$dialogWidth.'" '.$display : '';?>>
 		<div class="fixed">
@@ -121,10 +121,12 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 	</div>
 	<?php //end.Notifier ?>
 
-<?php } else {?> 
+<?php } else { ?> 
 
 	<?php //begin.Header ?>
-	<header class="clearfix">		
+	<header class="clearfix">
+		<?php $this->widget('LanguageFlag'); ?>
+		
 		<?php //begin.Loading ?>
 		<div class="loading"><img src="<?php echo Yii::app()->theme->baseUrl;?>/images/icons/ajax_loader.gif" /><span>Loading...</span></div>
 		<?php //begin.Success ?>
@@ -137,7 +139,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 		<div class="fixed">
 			<div class="valign">
 				<div class="dialog-box">
-					<div class="content" id="<?php echo $dialogWidth;?>" name="notifier-wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? (($this->dialogDetail == true && !empty($this->dialogWidth)) ? $content : '') : '' ?></div>
+					<div class="content" id="<?php echo $dialogWidth;?>" name="notifier-wrapper"><?php echo ($this->dialogDetail == true && !empty($this->dialogWidth)) ? $content : '';?></div>
 				</div>
 			</div>
 		</div>
@@ -149,22 +151,18 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 		<div class="fixed">
 			<div class="valign">
 				<div class="dialog-box">
-					<div class="content" id="<?php echo $dialogWidth;?>" name="dialog-wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? (($this->dialogDetail == true && empty($this->dialogWidth)) ? $content : '') : '' ?></div>			
+					<div class="content" id="<?php echo $dialogWidth;?>" name="dialog-wrapper"><?php echo ($this->dialogDetail == true && empty($this->dialogWidth)) ? $content : '';?></div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<?php //end.Dialog ?>
 
-	<div class="board" <?php echo ($currentModule == 'kanban/backlog' && in_array($action, array('board','add','edit','subtask','comment'))) ? 'style="display: block;"' : '';?>>
-		<div class="fixed"><?php echo $currentModuleAction == 'kanban/backlog/board' ? $content : '' ?></div>
-	</div>
-
 	<?php //begin.BodyContent ?>
 	<div class="body clearfix">
 		<?php //begin.Sidebar ?>
 		<div class="sidebar">
-			<div class="table">
+			<div class="table clearfix">
 				<?php //begin.Information ?>
 				<?php $this->widget('AdminAccount'); ?>
 				<?php //end.Information ?>
@@ -180,7 +178,8 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 
 		<?php //begin.Content ?>
 		<div class="content">
-			<div class="wrapper"><?php echo $currentModuleAction != 'kanban/backlog/board' ? ($this->dialogDetail == false ? $content : '') : '' ?>
+			<div class="wrapper">
+				<?php echo $this->dialogDetail == false ? $content : '';?>
 			</div>
 		</div>
 		<?php //end.Content ?>
@@ -193,6 +192,7 @@ if(isset($_GET['protocol']) && $_GET['protocol'] == 'script') {
 	</footer>
 	<?php //end.Footer ?>
 <?php }?>
+	<?php $this->widget('FrontGoogleAnalytics'); ?>
 
  </body>
 </html>
